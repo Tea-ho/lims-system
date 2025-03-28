@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: LIMS_STUDY
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/lims_study?serverTimezone=UTC
+    username: lims_study
+    password: rlaxogh123!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  mapper-locations: classpath:mappers/*/*.xml
+  type-aliases-package: com.lims.lims_study.*.domain
