@@ -15,7 +15,7 @@ mybatis:
   mapper-locations: classpath:mappers/*/*.xml
   type-aliases-package: com.lims.lims_study.*.domain
 
-logging:
+logging: ##
   level:
     root: INFO                    # ?? ?? ??
     com.lims.lims_study: DEBUG    # ???? ???? ?? ??? ??
