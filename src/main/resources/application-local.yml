@@ -5,6 +5,6 @@ spring:
     password: rlaxogh123!
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      maximum-pool-size: 15
+      maximum-pool-size: 15 #유의사항: 프로젝트 규모 고려하여 설정
       minimum-idle: 5
-      idle-timeout: 30000
+      idle-timeout: 28800 #유의사항: DB 커넥션과 일치시켜야함 (mySql 명령어: show global variables like '%timeout')
