@@ -1,26 +1,46 @@
+# 서버 설정
+server:
+  port: 8083
+
+# Spring 기본 설정
 spring:
+  profiles:
+    active: local
   application:
     name: LIMS_STUDY
   mvc:
     view:
       prefix: /WEB-INF/views/
       suffix: .jsp
-  datasource:
-    url: jdbc:mysql://127.0.0.1:3306/lims_study?serverTimezone=UTC
-    username: lims_study
-    password: rlaxogh123!
-    driver-class-name: com.mysql.cj.jdbc.Driver
 
+# MyBatis 설정
 mybatis:
   mapper-locations: classpath:mappers/*/*.xml
   type-aliases-package: com.lims.lims_study.*.domain
+  configuration:
+    map-underscore-to-camel-case: true
 
+# 로깅 설정
 logging:
   level:
-    root: INFO                    # ?? ?? ??
-    com.lims.lims_study: DEBUG    # ???? ???? ?? ??? ??
+    root: INFO
+    com.lims.lims_study: DEBUG
+    org.springframework: INFO
+    org.mybatis: DEBUG
   file:
-    name: logs/lims_study.log     # ?? ?? ??
+    name: logs/lims_study.log
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"  # ?? ?? ??
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"     # ?? ?? ??
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# JWT
+jwt:
+  secret: sfdjio3fffa             # JWT secret key
+  expiration: 86400000            # 24시간
+
+# Swagger
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
