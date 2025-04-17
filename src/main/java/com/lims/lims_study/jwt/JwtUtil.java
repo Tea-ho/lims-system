@@ -8,6 +8,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
+/*
+* JWT 단점
+* - 토큰 크기: 많은 데이터 담으면 network 오버헤드 발생
+* - 토큰 취소 어려움: 한 번 발급하면, 만료 전까지 무효화 어려움
+* - 보안: 토큰 탈취 당하면 보안 위험
+* */
 @Component
 public class JwtUtil {
 

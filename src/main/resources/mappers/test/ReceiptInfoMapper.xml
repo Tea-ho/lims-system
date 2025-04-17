@@ -1,0 +1,28 @@
+<!-- resources/mappers/test/ReceiptInfoMapper.xml -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lims.lims_study.domain.test.repository.ReceiptInfoMapper">
+
+    <resultMap id="ReceiptInfoResultMap" type="ReceiptInfo">
+        <id property="id" column="id"/>
+        <result property="receiptDetails" column="receipt_details"/>
+        <result property="requiresApproval" column="requires_approval"/>
+        <result property="approvalId" column="approval_id"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="ReceiptInfo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO receipt_infos (receipt_details, requires_approval, approval_id)
+        VALUES (#{receiptDetails}, #{requiresApproval}, #{approvalId})
+    </insert>
+
+    <update id="update" parameterType="ReceiptInfo">
+        UPDATE receipt_infos
+        SET receipt_details = #{receiptDetails},
+            requires_approval = #{requiresApproval},
+            approval_id = #{approvalId}
+        WHERE id = #{id}
+    </update>
+
+    <select id="findById" resultMap="ReceiptInfoResultMap">
+        SELECT * FROM receipt_infos WHERE id = #{id}
+    </select>
+</mapper>

@@ -1,6 +1,15 @@
-# 서버 설정
+# 서버 설정 (기본 port, 에러 관리, 인코딩 설정)
 server:
   port: 8083
+  error:
+    whitelabel:
+      enabled: false  # Whitelabel 에러 페이지 비활성화
+    path: /error      # 추후 에러별로 경로 설정 필요
+  servlet:
+    encoding:
+      charset: UTF-8   # 문자 인코딩 설정
+      enabled: true    # 인코딩 활성화
+      force: true      # 강제로 UTF-8 적용
 
 # Spring 기본 설정
 spring:
@@ -19,6 +28,7 @@ mybatis:
   type-aliases-package: com.lims.lims_study.*.domain
   configuration:
     map-underscore-to-camel-case: true
+  type-handlers-package: com.lims.lims_study.handler
 
 # 로깅 설정
 logging:
@@ -37,10 +47,3 @@ logging:
 jwt:
   secret: sfdjio3fffa             # JWT secret key
   expiration: 86400000            # 24시간
-
-# Swagger
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-  api-docs:
-    path: /v3/api-docs

@@ -2,10 +2,12 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '2.7.18'
 	id 'io.spring.dependency-management' version '1.1.4'
+	id 'org.asciidoctor.jvm.convert' version '3.3.2'
 }
 
 group = 'com.lims.lims_study'
 version = '0.0.1-SNAPSHOT'
+def snippetsDir = file('build/generated-snippets')
 
 java {
 	toolchain {
@@ -22,7 +24,6 @@ dependencies {
 	implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.3.2'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springdoc:springdoc-openapi-ui:1.8.0'
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
@@ -35,12 +36,26 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:2.3.2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 }
 
-tasks.named('test') {
+test {
 	useJUnitPlatform()
+	outputs.dir snippetsDir
+}
+
+asciidoctor {
+	sources {
+		include 'index.adoc'
+	}
+	outputDir file('build/docs')
+	attributes 'snippets': snippetsDir.absolutePath
+	inputs.files snippetsDir
+	dependsOn test
 }
 
 bootJar {
 	archiveFileName = "lims-study-${version}.jar"
+	dependsOn test, asciidoctor
 }

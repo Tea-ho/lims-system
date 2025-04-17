@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lims.lims_study.domain.user.repository.UserMapper">
+
+    <!-- 결과 매핑 -->
+    <resultMap id="UserResultMap" type="User">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="authorities" column="authorities"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 사용자 삽입 -->
+    <insert id="insert" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users (username, password, authorities, created_at, updated_at)
+        VALUES (#{username}, #{password}, #{authorities}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <!-- 사용자 수정 -->
+    <update id="update" parameterType="User">
+        UPDATE users
+        SET password = #{password},
+            authorities = #{authorities},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 사용자 삭제 -->
+    <delete id="delete" parameterType="long">
+        DELETE FROM users
+        WHERE id = #{id}
+    </delete>
+
+    <!-- ID로 사용자 조회 -->
+    <select id="findById" parameterType="long" resultMap="UserResultMap">
+        SELECT id, username, password, authorities, created_at, updated_at
+        FROM users
+        WHERE id = #{id}
+    </select>
+
+    <!-- 사용자 이름으로 사용자 조회 -->
+    <select id="findByUsername" parameterType="string" resultMap="UserResultMap">
+        SELECT id, username, password, authorities, created_at, updated_at
+        FROM users
+        WHERE username = #{username}
+    </select>
+
+    <!-- 사용자 이름으로 검색 -->
+    <select id="searchByUsername" parameterType="string" resultMap="UserResultMap">
+        SELECT id, username, password, authorities, created_at, updated_at
+        FROM users
+        <where>
+            <if test="username != null and username != ''">
+                username LIKE CONCAT('%', #{username}, '%')
+            </if>
+        </where>
+    </select>
+
+</mapper>

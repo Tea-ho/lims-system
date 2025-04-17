@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lims.lims_study.domain.product.repository.ProductMapper">
+
+    <resultMap id="ProductResultMap" type="Product">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="Product" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO products (name, description, created_at, updated_at)
+        VALUES (#{name}, #{description}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update" parameterType="Product">
+        UPDATE products
+        SET name = #{name},
+            description = #{description},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete" parameterType="long">
+        DELETE FROM products
+        WHERE id = #{id}
+    </delete>
+
+    <select id="findById" parameterType="long" resultMap="ProductResultMap">
+        SELECT id, name, description, created_at, updated_at
+        FROM products
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByName" parameterType="string" resultMap="ProductResultMap">
+        SELECT id, name, description, created_at, updated_at
+        FROM products
+        WHERE name = #{name}
+    </select>
+
+    <select id="searchByName" parameterType="string" resultMap="ProductResultMap">
+        SELECT id, name, description, created_at, updated_at
+        FROM products
+        <where>
+            <if test="name != null and name != ''">
+                name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+        ORDER BY created_at DESC
+    </select>
+</mapper>
