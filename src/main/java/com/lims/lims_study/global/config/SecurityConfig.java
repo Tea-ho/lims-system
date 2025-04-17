@@ -1,6 +1,5 @@
-package com.lims.lims_study.config;
+package com.lims.lims_study.global.config;
 
-import com.lims.lims_study.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,17 +23,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf().disable()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .csrf().disable() // CSRF 보안 비활성화 (JWT 사용 시 보통 필요 없음)
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 세션을 사용하지 않고 JWT 기반 인증을 사용
                 .and()
                 .authorizeRequests()
-                .antMatchers("/test","/login", "/api/users/register",
-                        "/api/auth/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**").permitAll()
-                .anyRequest().authenticated()
+                .antMatchers("/test","/login", "/api/users/register", "/api/users/**", "/api/products/**", "/api/tests/**",
+                        "/api/auth/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**").permitAll() // 특정 경로는 인증 없이 접근 허용
+                .anyRequest().authenticated() // 위에서 허용한 경로 외에는 인증 필요
                 .and()
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // JWT 인증 필터를 Spring Security 필터 체인에 추가
+
         return http.build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
