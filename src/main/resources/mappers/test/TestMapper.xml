@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lims.lims_study.domain.test.repository.TestMapper">
+
+    <!-- 결과 매핑 -->
+    <resultMap id="TestResultMap" type="Test">
+        <id property="id" column="id"/>
+        <result property="requestInfoId" column="request_info_id"/>
+        <result property="receiptInfoId" column="receipt_info_id"/>
+        <result property="resultInfoId" column="result_info_id"/>
+        <result property="completionInfoId" column="completion_info_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="stage" column="stage"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 테스트 삽입 -->
+    <insert id="insert" parameterType="Test" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tests (
+            request_info_id, receipt_info_id, result_info_id, completion_info_id,
+            user_id, product_id, stage, created_at, updated_at
+        )
+        VALUES (
+                   #{requestInfoId}, #{receiptInfoId}, #{resultInfoId}, #{completionInfoId},
+                   #{userId}, #{productId}, #{stage}, #{createdAt}, #{updatedAt}
+               )
+    </insert>
+
+    <!-- 테스트 조회 (ID) -->
+    <select id="findById" parameterType="long" resultMap="TestResultMap">
+        SELECT id, request_info_id, receipt_info_id, result_info_id, completion_info_id,
+               user_id, product_id, stage, created_at, updated_at
+        FROM tests
+        WHERE id = #{id}
+    </select>
+
+    <!-- 테스트 조회 (단계) -->
+    <select id="findByStage" parameterType="com.lims.lims_study.domain.test.model.TestStage" resultMap="TestResultMap">
+        SELECT id, request_info_id, receipt_info_id, result_info_id, completion_info_id,
+               user_id, product_id, stage, created_at, updated_at
+        FROM tests
+        WHERE stage = #{name}
+    </select>
+
+    <!-- 테스트 검색 (동적 조건) -->
+    <select id="findBySearchConditions" resultMap="TestResultMap">
+        SELECT t.id, t.request_info_id, t.receipt_info_id, t.result_info_id, t.completion_info_id,
+        t.user_id, t.product_id, t.stage, t.created_at, t.updated_at
+        FROM tests t
+        LEFT JOIN request_info ri ON t.request_info_id = ri.id
+        LEFT JOIN users u ON t.user_id = u.id
+        <where>
+            <if test="title != null and title != ''">
+                ri.title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="username != null and username != ''">
+                AND u.username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="stage != null">
+                AND t.stage = #{stage.name}
+            </if>
+        </where>
+        ORDER BY t.created_at DESC
+    </select>
+
+    <!-- 테스트 수정 -->
+    <update id="update" parameterType="Test">
+        UPDATE tests
+        SET request_info_id = #{requestInfoId},
+            receipt_info_id = #{receiptInfoId},
+            result_info_id = #{resultInfoId},
+            completion_info_id = #{completionInfoId},
+            user_id = #{userId},
+            product_id = #{productId},
+            stage = #{stage},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 테스트 삭제 -->
+    <delete id="delete" parameterType="long">
+        DELETE FROM tests
+        WHERE id = #{id}
+    </delete>
+
+</mapper>
