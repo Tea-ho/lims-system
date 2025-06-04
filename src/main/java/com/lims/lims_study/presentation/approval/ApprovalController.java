@@ -19,7 +19,7 @@ public class ApprovalController {
     private final IApprovalApplicationService approvalService;
 
     @PostMapping
-    public ResponseEntity<ApprovalResponseDto> createApproval(@Valid @RequestBody ApprovalCreateDto dto) {
+    public ResponseEntity<ApprovalResponseDto> createApproval(@RequestBody ApprovalCreateDto dto) {
         ApprovalResponseDto response = approvalService.createApproval(dto);
         return ResponseEntity.ok(response);
     }
