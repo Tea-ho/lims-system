@@ -1,6 +1,6 @@
-<!-- resources/mappers/test/RequestInfoMapper.xml -->
+<!-- resources/mappers/test/RequestInfoRepository.xml -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.lims.lims_study.domain.test.repository.RequestInfoMapper">
+<mapper namespace="com.lims.lims_study.domain.testRepository.repository.RequestInfoRepository">
 
     <resultMap id="RequestInfoResultMap" type="RequestInfo">
         <id property="id" column="id"/>

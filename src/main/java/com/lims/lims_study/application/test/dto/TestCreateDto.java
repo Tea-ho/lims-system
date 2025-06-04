@@ -21,20 +21,4 @@ public class TestCreateDto {
     public boolean isRequiresApproval() {
         return requiresApproval;
     }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setProductId(Long productId) {
-        this.productId = productId;
-    }
-
-    public void setRequiresApproval(boolean requiresApproval) {
-        this.requiresApproval = requiresApproval;
-    }
 }

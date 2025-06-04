@@ -1,5 +1,7 @@
 package com.lims.lims_study.application.test.service;
 
+import com.lims.lims_study.application.approval.dto.ApprovalCreateDto;
+import com.lims.lims_study.application.approval.dto.ApprovalSignUpdateDto;
 import com.lims.lims_study.application.test.dto.*;
 
 import java.util.List;
@@ -12,4 +14,8 @@ public interface ITestApplicationService {
     List<TestResponseDto> searchTests(TestSearchDto dto);
     TestResponseDto moveToReceipt(Long testId, ReceiptCreateDto dto);
     TestResponseDto moveBackToRequest(Long testId);
+    TestResponseDto moveToReceiptApproval(Long testId, ApprovalCreateDto approvalDto);
+    TestResponseDto moveBackToReceipt(Long testId, Long approvalId, ApprovalSignUpdateDto updateDto);
+    TestResponseDto moveToInputResult(Long testId, Long approvalId, ApprovalSignUpdateDto updateDto);
+
 }

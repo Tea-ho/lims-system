@@ -1,9 +1,10 @@
 package com.lims.lims_study.domain.test.service;
 
+import com.lims.lims_study.application.test.dto.TestUpdateDto;
 import com.lims.lims_study.domain.test.model.RequestInfo;
-import com.lims.lims_study.domain.test.model.Test;
 import com.lims.lims_study.domain.test.model.TestStage;
-import com.lims.lims_study.domain.test.repository.TestMapper;
+import com.lims.lims_study.domain.test.model.Test;
+import com.lims.lims_study.domain.test.repository.TestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,28 +15,32 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class TestCrudService implements ITestCrudService {
-    private final TestMapper testMapper;
+    private final TestRepository test;
     private final ITestRequestCrudService testRequestCrudService;
     private final TestValidator testValidator;
 
     @Override
     @Transactional
     public void createTest(Test test, RequestInfo requestInfo) {
-        testValidator.validateCreate(test);
+        testValidator.validateUserAndProductExists(test);
         testRequestCrudService.insert(requestInfo);
         test.setRequestInfoId(requestInfo.getId());
-        testMapper.insert(test);
+        this.test.insert(test);
     }
 
     @Override
-    @Transactional
-    public void updateRequestInfo(Long testId, RequestInfo requestInfo) {
+    public void updateRequestInfo(Long testId, TestUpdateDto dto) {
         Test test = testValidator.validateTestExists(testId, this);
         if (!TestStage.REQUEST.name().equals(test.getStage())) {
             throw new IllegalStateException("Can only update request info in REQUESTED stage");
         }
-        requestInfo.setId(test.getRequestInfoId());
-        testRequestCrudService.update(requestInfo);
+
+        Long requestInfoId = test.getRequestInfoId();
+        RequestInfo existing = testRequestCrudService.findById(requestInfoId)
+                .orElseThrow(() -> new IllegalArgumentException("RequestInfo not found: " + requestInfoId));
+
+        existing.updateRequestInfo(dto);
+        testRequestCrudService.update(existing);
     }
 
     @Override
@@ -43,27 +48,26 @@ public class TestCrudService implements ITestCrudService {
     public void deleteTest(Long testId) {
         Test test = testValidator.validateTestExists(testId, this);
         testRequestCrudService.delete(test.getRequestInfoId());
-        testMapper.delete(testId);
+        this.test.delete(testId);
     }
 
     @Override
     public Optional<Test> findById(Long testId) {
-        return testMapper.findById(testId);
+        return test.findById(testId);
     }
 
     @Override
     public List<Test> findByStage(TestStage stage) {
-        return testMapper.findByStage(stage);
+        return test.findByStage(stage);
     }
 
     @Override
     public List<Test> findBySearchConditions(String title, String username, TestStage stage) {
-        return testMapper.findBySearchConditions(title, username, stage);
+        return test.findBySearchConditions(title, username, stage);
     }
 
     @Override
-    @Transactional
     public void updateTest(Test test) {
-        testMapper.update(test);
+        this.test.update(test);
     }
 }

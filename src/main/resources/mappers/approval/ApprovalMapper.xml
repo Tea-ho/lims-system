@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lims.lims_study.domain.approval.repository.ApprovalRepository">
+    <resultMap id="ApprovalResultMap" type="com.lims.lims_study.domain.approval.model.Approval">
+        <id property="id" column="id"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="Approval" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO approvals (status, created_at, updated_at)
+        VALUES (#{status}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update" parameterType="Approval">
+        UPDATE approvals
+        SET status = #{status},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete" parameterType="long">
+        DELETE FROM approvals
+        WHERE id = #{id}
+    </delete>
+
+    <select id="findById" parameterType="long" resultMap="ApprovalResultMap">
+        SELECT id, status, created_at, updated_at
+        FROM approvals
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByTargetId" parameterType="long" resultMap="ApprovalResultMap">
+        SELECT DISTINCT a.id, a.status, a.created_at, a.updated_at
+        FROM approvals a
+                 JOIN approval_signs s ON a.id = s.approval_id
+        WHERE s.target_id = #{targetId}
+        ORDER BY a.created_at DESC
+    </select>
+</mapper>

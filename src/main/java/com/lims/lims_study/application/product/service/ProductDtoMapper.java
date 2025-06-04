@@ -4,6 +4,8 @@ import com.lims.lims_study.application.product.dto.ProductResponseDto;
 import com.lims.lims_study.domain.product.model.Product;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 public class ProductDtoMapper {
     public ProductResponseDto toResponseDto(Product product) {
@@ -12,7 +14,13 @@ public class ProductDtoMapper {
                 product.getName(),
                 product.getDescription(),
                 product.getCreatedAt().toString(),
-                product.getUpdatedAt() != null ? product.getUpdatedAt().toString() : null
+                mapUpdatedAt(product.getUpdatedAt())
         );
+    }
+
+    private String mapUpdatedAt(Object updatedAt) {
+        return Optional.ofNullable(updatedAt)
+                .map(Object::toString)
+                .orElse(null);
     }
 }

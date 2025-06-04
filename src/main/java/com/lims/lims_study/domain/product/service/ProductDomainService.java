@@ -1,11 +1,11 @@
 package com.lims.lims_study.domain.product.service;
 
+import com.lims.lims_study.application.product.dto.ProductUpdateDto;
 import com.lims.lims_study.domain.product.model.Product;
-import com.lims.lims_study.domain.product.repository.ProductMapper;
+import com.lims.lims_study.domain.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,39 +16,36 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProductDomainService implements IProductService {
 
-    private final ProductMapper productMapper;
+    private final ProductRepository productRepository;
     private final ProductValidator productValidator;
 
     @Override
-    @Transactional
     public void createProduct(Product product) {
-        productValidator.validateCreate(product);
-        productMapper.insert(product);
+        productValidator.checkProductNameBlank(product);
+        productValidator.checkDuplicateProductName(product);
+        this.productRepository.insert(product);
     }
 
     @Override
-    @Transactional
-    public void updateProduct(Long productId, Product product) {
-        productValidator.validateProductExists(productId);
-        product.setId(productId);
-        product.setUpdatedAt(LocalDateTime.now());
-        productMapper.update(product);
+    public void updateProduct(Long productId, ProductUpdateDto dto) {
+        Product existing = productValidator.validateProductExists(productId);
+        existing.updateProductInfo(dto);
+        this.productRepository.update(existing);
     }
 
     @Override
-    @Transactional
     public void deleteProduct(Long productId) {
         productValidator.validateProductExists(productId);
-        productMapper.delete(productId);
+        productRepository.delete(productId);
     }
 
     @Override
     public Optional<Product> findById(Long productId) {
-        return productMapper.findById(productId);
+        return productRepository.findById(productId);
     }
 
     @Override
     public List<Product> searchProducts(String name) {
-        return productMapper.searchByName(name);
+        return productRepository.searchByName(name);
     }
 }

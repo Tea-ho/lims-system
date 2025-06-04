@@ -1,13 +1,11 @@
 package com.lims.lims_study.presentation.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lims.lims_study.application.user.dto.UserCreateDto;
-import com.lims.lims_study.application.user.dto.UserResponseDto;
-import com.lims.lims_study.application.user.dto.UserUpdateDto;
+import com.lims.lims_study.application.user.dto.*;
 import com.lims.lims_study.application.user.service.IUserApplicationService;
 import com.lims.lims_study.config.TestSecurityConfig;
 import com.lims.lims_study.domain.user.model.User;
-import com.lims.lims_study.global.config.JwtUtil;
+import com.lims.lims_study.global.config.JwtProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
@@ -31,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(UserController.class)
 @AutoConfigureRestDocs(outputDir = "build/generated-snippets")
 @Import(TestSecurityConfig.class)
-class UserControllerTest {
+class UserRepositoryControllerTestRepository {
 
     @Autowired
     private MockMvc mockMvc;
@@ -40,14 +38,14 @@ class UserControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private JwtUtil jwtUtil;
+    private JwtProvider jwtProvider;
 
     @MockBean
     private IUserApplicationService userApplicationService;
 
     @Test
     void shouldRegisterUser() throws Exception {
-        UserCreateDto createDto = new UserCreateDto();
+        UserCreateDtoTest createDto = new UserCreateDtoTest();
         createDto.setUsername("user");
         createDto.setPassword("password");
         createDto.setAuthorities("USER");
@@ -80,7 +78,7 @@ class UserControllerTest {
 
     @Test
     void shouldUpdateUser() throws Exception {
-        UserUpdateDto updateDto = new UserUpdateDto();
+        UserUpdateDtoTest updateDto = new UserUpdateDtoTest();
         updateDto.setPassword("newpassword123");
         updateDto.setAuthorities("ADMIN");
 
