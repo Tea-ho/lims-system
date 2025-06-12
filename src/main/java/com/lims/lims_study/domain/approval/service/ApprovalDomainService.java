@@ -30,7 +30,6 @@ public class ApprovalDomainService implements IApprovalService {
     public ApprovalResponseDto createApproval(ApprovalCreateDto dto) {
         approvalValidator.checkRequesterExists(dto.getRequesterId());
         approvalValidator.checkApproverAndTargetExists(dto.getSigns());
-        approvalValidator.ensureUniqueSignsForApproval(null, dto.getSigns());
 
         Approval approval = new Approval(ApprovalStatus.PENDING);
         approvalRepository.insert(approval);
