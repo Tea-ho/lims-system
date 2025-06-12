@@ -56,12 +56,7 @@ public class TestStateService implements ITestStateService {
     public void moveBackToReceipt(Long testId, Long approvalId, ApprovalSignUpdateDto updateDto) {
         Test test = testValidator.validateTestExists(testId, testCrudService);
 
-        if (approvalId != null) {
-            ApprovalResponseDto approval = approvalService.getApproval(approvalId);
-            for (ApprovalResponseDto.ApprovalSignDto signDto : approval.getSigns()) {
-                approvalService.updateApprovalSign(approvalId, signDto.getId(), updateDto);
-            }
-        }
+        updateApprovalSign(approvalId, updateDto);
 
         test.moveToPreviousStage();
         testCrudService.updateTest(test);
@@ -72,15 +67,17 @@ public class TestStateService implements ITestStateService {
     public void moveToInputResult(Long testId, Long approvalId, ApprovalSignUpdateDto updateDto) {
         Test test = testValidator.validateTestExists(testId, testCrudService);
 
-        if (approvalId != null) {
-            ApprovalResponseDto approval = approvalService.getApproval(approvalId);
-            for (ApprovalResponseDto.ApprovalSignDto signDto : approval.getSigns()) {
-                approvalService.updateApprovalSign(approvalId, signDto.getId(), updateDto);
-            }
-        }
+        updateApprovalSign(approvalId, updateDto);
 
         test.moveToNextStage();
         testCrudService.updateTest(test);
+    }
+
+    private void updateApprovalSign(Long approvalId, ApprovalSignUpdateDto updateDto){
+        ApprovalResponseDto approval = approvalService.getApproval(approvalId);
+        for (ApprovalResponseDto.ApprovalSignDto signDto : approval.getSigns()) {
+            approvalService.updateApprovalSign(approvalId, signDto.getId(), updateDto);
+        }
     }
 
 }
