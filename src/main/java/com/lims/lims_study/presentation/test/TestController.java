@@ -1,5 +1,7 @@
 package com.lims.lims_study.presentation.test;
 
+import com.lims.lims_study.application.approval.dto.ApprovalCreateDto;
+import com.lims.lims_study.application.approval.dto.ApprovalSignUpdateDto;
 import com.lims.lims_study.application.test.dto.*;
 import com.lims.lims_study.application.test.service.ITestApplicationService;
 import com.lims.lims_study.application.test.service.TestApplicationService;
@@ -62,6 +64,27 @@ public class TestController {
     @PostMapping("/{testId}/back-to-request")
     public ResponseEntity<TestResponseDto> moveBackToRequest(@PathVariable Long testId) {
         TestResponseDto response = testApplicationService.moveBackToRequest(testId);
+        return ResponseEntity.ok(response);
+    }
+
+    // 접수 -> 접수 결재
+    @PostMapping("/{testId}/receipt-approval")
+    public ResponseEntity<TestResponseDto> moveToReceiptApproval(@PathVariable Long testId, @RequestBody ApprovalCreateDto approvalDto) {
+        TestResponseDto response = testApplicationService.moveToReceiptApproval(testId, approvalDto);
+        return ResponseEntity.ok(response);
+    }
+
+    // 접수 결재 -> 접수
+    @PostMapping("/{testId}/back-to-receipt")
+    public ResponseEntity<TestResponseDto> moveBackToReceipt(@PathVariable Long testId, @RequestParam Long approvalId, @RequestBody ApprovalSignUpdateDto updateDto) {
+        TestResponseDto response = testApplicationService.moveBackToReceipt(testId, approvalId, updateDto);
+        return ResponseEntity.ok(response);
+    }
+    
+    // 접수 결재 -> 결과 입력
+    @PostMapping("/{testId}/input-result")
+    public ResponseEntity<TestResponseDto> moveToInputResult(@PathVariable Long testId, @RequestParam Long approvalId, @RequestBody ApprovalSignUpdateDto updateDto) {
+        TestResponseDto response = testApplicationService.moveToInputResult(testId, approvalId, updateDto);
         return ResponseEntity.ok(response);
     }
 }

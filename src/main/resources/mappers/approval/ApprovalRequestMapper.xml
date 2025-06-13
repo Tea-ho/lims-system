@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lims.lims_study.domain.approval.repository.ApprovalRequestRepository">
+    <resultMap id="ApprovalRequestResultMap" type="com.lims.lims_study.domain.approval.model.ApprovalRequest">
+        <id property="id" column="id"/>
+        <result property="approvalId" column="approval_id"/>
+        <result property="requesterId" column="requester_id"/>
+        <result property="comment" column="comment"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="ApprovalRequest" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO approval_requests (approval_id, requester_id, comment, created_at, updated_at)
+        VALUES (#{approvalId}, #{requesterId}, #{comment}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <delete id="deleteByApprovalId" parameterType="long">
+        DELETE FROM approval_requests
+        WHERE approval_id = #{approvalId}
+    </delete>
+
+    <select id="findByApprovalId" parameterType="long" resultMap="ApprovalRequestResultMap">
+        SELECT id, approval_id, requester_id, comment, created_at, updated_at
+        FROM approval_requests
+        WHERE approval_id = #{approvalId}
+    </select>
+</mapper>

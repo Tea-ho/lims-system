@@ -27,10 +27,9 @@ public class ProductApplicationService implements IProductApplicationService {
 
     @Override
     public ProductResponseDto updateProduct(Long productId, ProductUpdateDto dto) {
-        Product product = new Product(productId, dto.getName(), dto.getDescription());
-        productService.updateProduct(productId, product);
+        productService.updateProduct(productId, dto);
         Product updated = productService.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+                .orElseThrow(() -> new IllegalArgumentException("ProductRepository not found: " + productId));
         return productDtoMapper.toResponseDto(updated);
     }
 
@@ -42,7 +41,7 @@ public class ProductApplicationService implements IProductApplicationService {
     @Override
     public ProductResponseDto getProduct(Long productId) {
         Product product = productService.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+                .orElseThrow(() -> new IllegalArgumentException("ProductRepository not found: " + productId));
         return productDtoMapper.toResponseDto(product);
     }
 

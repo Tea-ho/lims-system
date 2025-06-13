@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.lims.lims_study.domain.test.repository.TestMapper">
+<mapper namespace="com.lims.lims_study.domain.test.repository.TestRepository">
 
     <!-- 결과 매핑 -->
     <resultMap id="TestResultMap" type="Test">
@@ -37,7 +37,7 @@
     </select>
 
     <!-- 테스트 조회 (단계) -->
-    <select id="findByStage" parameterType="com.lims.lims_study.domain.test.model.TestStage" resultMap="TestResultMap">
+    <select id="findByStage" parameterType="com.lims.lims_study.domain.testRepository.model.TestStage" resultMap="TestResultMap">
         SELECT id, request_info_id, receipt_info_id, result_info_id, completion_info_id,
                user_id, product_id, stage, created_at, updated_at
         FROM tests

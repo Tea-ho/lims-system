@@ -1,10 +1,9 @@
 package com.lims.lims_study.domain.test.service;
 
 import com.lims.lims_study.domain.test.model.ReceiptInfo;
-import com.lims.lims_study.domain.test.repository.ReceiptInfoMapper;
+import com.lims.lims_study.domain.test.repository.ReceiptInfoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -12,22 +11,20 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TestReceiptCrudService implements ITestReceiptCrudService{
 
-    private final ReceiptInfoMapper receiptInfoMapper;
+    private final ReceiptInfoRepository receiptInfoRepository;
 
     @Override
-    @Transactional
     public void insert(ReceiptInfo receiptInfo) {
-        receiptInfoMapper.insert(receiptInfo);
+        this.receiptInfoRepository.insert(receiptInfo);
     }
 
     @Override
-    @Transactional
     public void update(ReceiptInfo receiptInfo) {
-        receiptInfoMapper.update(receiptInfo);
+        this.receiptInfoRepository.update(receiptInfo);
     }
 
     @Override
     public Optional<ReceiptInfo> findById(Long id) {
-        return receiptInfoMapper.findById(id);
+        return receiptInfoRepository.findById(id);
     }
 }

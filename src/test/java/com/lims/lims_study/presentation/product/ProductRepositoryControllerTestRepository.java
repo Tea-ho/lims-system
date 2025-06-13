@@ -2,12 +2,13 @@ package com.lims.lims_study.presentation.product;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lims.lims_study.application.product.dto.ProductCreateDto;
+import com.lims.lims_study.application.product.dto.ProductCreateDtoTest;
 import com.lims.lims_study.application.product.dto.ProductResponseDto;
 import com.lims.lims_study.application.product.service.IProductApplicationService;
 import com.lims.lims_study.application.product.service.ProductDtoMapper;
 import com.lims.lims_study.config.TestSecurityConfig;
 import com.lims.lims_study.domain.product.model.Product;
-import com.lims.lims_study.global.config.JwtUtil;
+import com.lims.lims_study.global.config.JwtProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
@@ -31,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ProductController.class)
 @AutoConfigureRestDocs(outputDir = "build/generated-snippets")
 @Import(TestSecurityConfig.class)
-public class ProductControllerTest {
+public class ProductRepositoryControllerTestRepository {
 
     @Autowired
     private MockMvc mockMvc;
@@ -40,7 +41,7 @@ public class ProductControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private JwtUtil jwtUtil;
+    private JwtProvider jwtProvider;
 
     @MockBean
     private IProductApplicationService productApplicationService;
@@ -50,9 +51,9 @@ public class ProductControllerTest {
 
     @Test
     void shouldCreateProduct() throws Exception {
-        ProductCreateDto createDto = new ProductCreateDto();
+        ProductCreateDtoTest createDto = new ProductCreateDtoTest();
         createDto.setName("product");
-        createDto.setDescription("product Test");
+        createDto.setDescription("product TestRepository");
 
         Product product = new Product(1L, createDto.getName(), createDto.getDescription());
         product.setCreatedAt(LocalDateTime.now());

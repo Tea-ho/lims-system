@@ -1,18 +1,12 @@
 package com.lims.lims_study.domain.test.repository;
 
 import com.lims.lims_study.domain.test.model.RequestInfo;
+import com.lims.lims_study.global.common.BaseRepository;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.Optional;
 
 @Mapper
-public interface RequestInfoMapper {
+public interface RequestInfoRepository extends BaseRepository<RequestInfo, Long> {
 
-    void insert(RequestInfo requestInfo);
-
-    void update(RequestInfo requestInfo);
-
-    void delete(Long id);
-
-    Optional<RequestInfo> findById(Long id);
 }

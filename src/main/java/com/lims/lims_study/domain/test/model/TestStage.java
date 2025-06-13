@@ -42,7 +42,7 @@ public enum TestStage {
 
         @Override
         public TestStage previous() {
-            return RECEIPT_APPROVAL;
+            return RECEIPT;
         }
     },
     COMPLETED {

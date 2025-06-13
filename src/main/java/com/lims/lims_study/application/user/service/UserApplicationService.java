@@ -28,10 +28,9 @@ public class UserApplicationService implements IUserApplicationService {
 
     @Override
     public UserResponseDto updateUser(Long userId, UserUpdateDto dto) {
-        User user = new User(userId, null, passwordEncoder.encode(dto.getPassword()), dto.getAuthorities());
-        userService.updateUser(userId, user);
+        userService.updateUser(userId, dto);
         User updated = userService.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new IllegalArgumentException("UserRepository not found: " + userId));
         return dtoMapper.toResponseDto(updated);
     }
 
@@ -43,7 +42,7 @@ public class UserApplicationService implements IUserApplicationService {
     @Override
     public UserResponseDto getUser(Long userId) {
         User user = userService.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new IllegalArgumentException("UserRepository not found: " + userId));
         return dtoMapper.toResponseDto(user);
     }
 
@@ -51,7 +50,7 @@ public class UserApplicationService implements IUserApplicationService {
     public UserResponseDto getCurrentUser() {
         String username = authProvider.getCurrentUsername();
         User user = userService.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+                .orElseThrow(() -> new IllegalArgumentException("UserRepository not found: " + username));
         return dtoMapper.toResponseDto(user);
     }
 

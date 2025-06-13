@@ -1,12 +1,11 @@
-<!-- resources/mappers/test/ReceiptInfoMapper.xml -->
+<!-- resources/mappers/test/ReceiptInfoRepository.xml -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.lims.lims_study.domain.test.repository.ReceiptInfoMapper">
+<mapper namespace="com.lims.lims_study.domain.test.repository.ReceiptInfoRepository">
 
     <resultMap id="ReceiptInfoResultMap" type="ReceiptInfo">
         <id property="id" column="id"/>
         <result property="receiptDetails" column="receipt_details"/>
         <result property="requiresApproval" column="requires_approval"/>
-        <result property="approvalId" column="approval_id"/>
     </resultMap>
 
     <insert id="insert" parameterType="ReceiptInfo" useGeneratedKeys="true" keyProperty="id">

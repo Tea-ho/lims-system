@@ -2,6 +2,7 @@ package com.lims.lims_study.presentation.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lims.lims_study.application.test.dto.TestCreateDto;
+import com.lims.lims_study.application.test.dto.TestCreateDtoTest;
 import com.lims.lims_study.application.test.dto.TestResponseDto;
 import com.lims.lims_study.application.test.service.ITestApplicationService;
 import com.lims.lims_study.application.test.service.TestDtoMapper;
@@ -9,7 +10,7 @@ import com.lims.lims_study.config.TestSecurityConfig;
 import com.lims.lims_study.domain.product.model.Product;
 import com.lims.lims_study.domain.test.model.RequestInfo;
 import com.lims.lims_study.domain.user.model.User;
-import com.lims.lims_study.global.config.JwtUtil;
+import com.lims.lims_study.global.config.JwtProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
@@ -33,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(TestController.class)
 @AutoConfigureRestDocs(outputDir = "build/generated-snippets")
 @Import(TestSecurityConfig.class)
-public class TestControllerTest {
+public class TestControllerTestRepository {
 
     @Autowired
     private MockMvc mockMvc;
@@ -42,7 +43,7 @@ public class TestControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private JwtUtil jwtUtil;
+    private JwtProvider jwtProvider;
 
     @MockBean
     private ITestApplicationService testApplicationService;
@@ -57,16 +58,13 @@ public class TestControllerTest {
         Product product = new Product(1L, "product", "product");
         product.setCreatedAt(LocalDateTime.now());
 
-        TestCreateDto createDto = new TestCreateDto();
+        TestCreateDtoTest createDto = new TestCreateDtoTest();
         createDto.setTitle("test");
         createDto.setDescription("test create");
         createDto.setProductId(1L);
         createDto.setRequiresApproval(false);
 
-        RequestInfo requestInfo = new RequestInfo();
-        requestInfo.setTitle("requestInfo");
-        requestInfo.setDescription("requestInfo create");
-        requestInfo.setRequiresApproval(false);
+        RequestInfo requestInfo = new RequestInfo(createDto.getTitle(), createDto.getDescription(), createDto.isRequiresApproval());
 
         com.lims.lims_study.domain.test.model.Test test =
                 new com.lims.lims_study.domain.test.model.Test(1L, 1L, requestInfo);
