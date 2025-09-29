@@ -5,6 +5,7 @@ import com.lims.lims_study.application.product.dto.ProductResponseDto;
 import com.lims.lims_study.application.product.dto.ProductSearchDto;
 import com.lims.lims_study.application.product.dto.ProductUpdateDto;
 import com.lims.lims_study.application.product.service.IProductApplicationService;
+import com.lims.lims_study.global.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,9 +43,28 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/test")
+    public ResponseEntity<String> testEndpoint() {
+        try {
+            return ResponseEntity.ok("API 엔드포인트가 정상 작동합니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("오류 발생: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<ProductResponseDto>> getAllProducts() {
+        try {
+            List<ProductResponseDto> response = productApplicationService.getAllProducts();
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
     @GetMapping
-    public ResponseEntity<List<ProductResponseDto>> searchProducts(@ModelAttribute ProductSearchDto dto) {
+    public ResponseEntity<ApiResponse<List<ProductResponseDto>>> searchProducts(@ModelAttribute ProductSearchDto dto) {
         List<ProductResponseDto> response = productApplicationService.searchProducts(dto);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

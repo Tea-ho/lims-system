@@ -11,4 +11,7 @@ import java.util.Optional;
 public interface ProductRepository extends BaseRepository<Product, Long> {
     Optional<Product> findByName(String name);
     List<Product> searchByName(String name);
+    List<Product> findAllProducts();
+
+    long countAllProducts();
 }

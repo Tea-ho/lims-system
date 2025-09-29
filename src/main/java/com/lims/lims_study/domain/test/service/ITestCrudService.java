@@ -1,5 +1,6 @@
 package com.lims.lims_study.domain.test.service;
 
+import com.lims.lims_study.application.test.dto.TestSearchDto;
 import com.lims.lims_study.application.test.dto.TestUpdateDto;
 import com.lims.lims_study.domain.test.model.*;
 
@@ -12,6 +13,6 @@ public interface ITestCrudService {
     void deleteTest(Long testId);
     Optional<Test> findById(Long testId);
     List<Test> findByStage(TestStage stage);
-    List<Test> findBySearchConditions(String title, String username, TestStage stage);
+    List<Test> findBySearchConditions(TestSearchDto searchDto);
     void updateTest(Test test);
 }

@@ -13,4 +13,5 @@ public interface IProductApplicationService {
     void deleteProduct(Long productId);
     ProductResponseDto getProduct(Long productId);
     List<ProductResponseDto> searchProducts(ProductSearchDto dto);
+    List<ProductResponseDto> getAllProducts();
 }

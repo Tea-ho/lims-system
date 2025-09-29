@@ -42,7 +42,7 @@ public class TestApplicationService implements ITestApplicationService {
         Product product = productService.findById(dto.getProductId())
                 .orElseThrow(() -> new IllegalArgumentException("ProductRepository not found: " + dto.getProductId()));
 
-        RequestInfo requestInfo = new RequestInfo(dto.getTitle(), dto.getDescription(), dto.isRequiresApproval());
+        RequestInfo requestInfo = new RequestInfo(dto.getTitle(), dto.getDescription());
         Test test = new Test(user.getId(), product.getId(), requestInfo);
 
         testCrudService.createTest(test, requestInfo);
@@ -55,7 +55,7 @@ public class TestApplicationService implements ITestApplicationService {
         Test test = testCrudService.findById(testId)
                 .orElseThrow(() -> new IllegalArgumentException("TestRepository not found: " + testId));
         User user = userService.findById(test.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("UserRepository not found: " + test.getUserId()));
+                .orElse(createDefaultUser(test.getUserId()));
         Product product = productService.findById(test.getProductId())
                 .orElseThrow(() -> new IllegalArgumentException("ProductRepository not found: " + test.getProductId()));
         RequestInfo requestInfo = testRequestCrudService.findById(test.getRequestInfoId())
@@ -73,7 +73,7 @@ public class TestApplicationService implements ITestApplicationService {
         Test test = testCrudService.findById(testId)
                 .orElseThrow(() -> new IllegalArgumentException("TestRepository not found: " + testId));
         User user = userService.findById(test.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("UserRepository not found: " + test.getUserId()));
+                .orElse(createDefaultUser(test.getUserId()));
         Product product = productService.findById(test.getProductId())
                 .orElseThrow(() -> new IllegalArgumentException("ProductRepository not found: " + test.getProductId()));
         RequestInfo requestInfo = test.getRequestInfoId() != null ? testRequestCrudService.findById(test.getRequestInfoId()).orElse(null) : null;
@@ -83,16 +83,20 @@ public class TestApplicationService implements ITestApplicationService {
 
     @Override
     public List<TestResponseDto> searchTests(TestSearchDto dto) {
-        List<Test> tests = testCrudService.findBySearchConditions(dto.getTitle(), dto.getUsername(), dto.getStage());
+        List<Test> tests = testCrudService.findBySearchConditions(dto);
         return tests.stream().map(test -> {
             User user = userService.findById(test.getUserId())
-                    .orElseThrow(() -> new IllegalArgumentException("UserRepository not found: " + test.getUserId()));
+                    .orElse(createDefaultUser(test.getUserId()));
             Product product = productService.findById(test.getProductId())
                     .orElseThrow(() -> new IllegalArgumentException("ProductRepository not found: " + test.getProductId()));
             RequestInfo requestInfo = test.getRequestInfoId() != null ? testRequestCrudService.findById(test.getRequestInfoId()).orElse(null) : null;
             ReceiptInfo receiptInfo = test.getReceiptInfoId() != null ? testReceiptCrudService.findById(test.getReceiptInfoId()).orElse(null) : null;
             return dtoMapper.toResponseDto(test, user, product, requestInfo, receiptInfo, null, null);
         }).collect(Collectors.toList());
+    }
+
+    private User createDefaultUser(Long userId) {
+        return new User(userId, "알 수 없는 사용자", "defaultPassword", "ROLE_USER");
     }
 
     @Override
@@ -102,7 +106,7 @@ public class TestApplicationService implements ITestApplicationService {
         Test test = testCrudService.findById(testId)
                 .orElseThrow(() -> new IllegalArgumentException("TestRepository not found: " + testId));
         User user = userService.findById(test.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("UserRepository not found: " + test.getUserId()));
+                .orElse(createDefaultUser(test.getUserId()));
         Product product = productService.findById(test.getProductId())
                 .orElseThrow(() -> new IllegalArgumentException("ProductRepository not found: " + test.getProductId()));
         RequestInfo requestInfo = testRequestCrudService.findById(test.getRequestInfoId())
@@ -116,7 +120,7 @@ public class TestApplicationService implements ITestApplicationService {
         Test test = testCrudService.findById(testId)
                 .orElseThrow(() -> new IllegalArgumentException("TestRepository not found: " + testId));
         User user = userService.findById(test.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("UserRepository not found: " + test.getUserId()));
+                .orElse(createDefaultUser(test.getUserId()));
         Product product = productService.findById(test.getProductId())
                 .orElseThrow(() -> new IllegalArgumentException("ProductRepository not found: " + test.getProductId()));
         RequestInfo requestInfo = testRequestCrudService.findById(test.getRequestInfoId())

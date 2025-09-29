@@ -5,6 +5,7 @@ import com.lims.lims_study.application.approval.dto.ApprovalSignUpdateDto;
 import com.lims.lims_study.application.test.dto.*;
 import com.lims.lims_study.application.test.service.ITestApplicationService;
 import com.lims.lims_study.application.test.service.TestApplicationService;
+import com.lims.lims_study.global.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,9 +49,9 @@ public class TestController {
 
     // 시험 검색
     @GetMapping("/search")
-    public ResponseEntity<List<TestResponseDto>> searchTests(@ModelAttribute TestSearchDto dto) {
+    public ResponseEntity<ApiResponse<List<TestResponseDto>>> searchTests(@ModelAttribute TestSearchDto dto) {
         List<TestResponseDto> response = testApplicationService.searchTests(dto);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     // 의뢰 -> 접수

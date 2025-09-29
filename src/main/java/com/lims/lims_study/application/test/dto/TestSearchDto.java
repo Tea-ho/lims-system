@@ -6,17 +6,38 @@ public class TestSearchDto {
     private String title;
     private String username;
     private TestStage stage;
+    private Long productId;
 
     public String getTitle() {
         return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getUsername() {
         return username;
     }
 
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public TestStage getStage() {
         return stage;
+    }
+
+    public void setStage(TestStage stage) {
+        this.stage = stage;
+    }
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
     }
 
 }

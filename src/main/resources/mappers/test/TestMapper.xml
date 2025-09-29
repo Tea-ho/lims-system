@@ -3,7 +3,7 @@
 <mapper namespace="com.lims.lims_study.domain.test.repository.TestRepository">
 
     <!-- 결과 매핑 -->
-    <resultMap id="TestResultMap" type="Test">
+    <resultMap id="TestResultMap" type="com.lims.lims_study.domain.test.model.Test">
         <id property="id" column="id"/>
         <result property="requestInfoId" column="request_info_id"/>
         <result property="receiptInfoId" column="receipt_info_id"/>
@@ -17,14 +17,15 @@
     </resultMap>
 
     <!-- 테스트 삽입 -->
-    <insert id="insert" parameterType="Test" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.lims.lims_study.domain.test.model.Test" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO tests (
             request_info_id, receipt_info_id, result_info_id, completion_info_id,
             user_id, product_id, stage, created_at, updated_at
         )
         VALUES (
                    #{requestInfoId}, #{receiptInfoId}, #{resultInfoId}, #{completionInfoId},
-                   #{userId}, #{productId}, #{stage}, #{createdAt}, #{updatedAt}
+                   #{userId}, #{productId}, #{stage}, 
+                   #{createdAt}, #{updatedAt}
                )
     </insert>
 
@@ -37,7 +38,7 @@
     </select>
 
     <!-- 테스트 조회 (단계) -->
-    <select id="findByStage" parameterType="com.lims.lims_study.domain.testRepository.model.TestStage" resultMap="TestResultMap">
+    <select id="findByStage" parameterType="com.lims.lims_study.domain.test.model.TestStage" resultMap="TestResultMap">
         SELECT id, request_info_id, receipt_info_id, result_info_id, completion_info_id,
                user_id, product_id, stage, created_at, updated_at
         FROM tests
@@ -49,7 +50,7 @@
         SELECT t.id, t.request_info_id, t.receipt_info_id, t.result_info_id, t.completion_info_id,
         t.user_id, t.product_id, t.stage, t.created_at, t.updated_at
         FROM tests t
-        LEFT JOIN request_info ri ON t.request_info_id = ri.id
+        LEFT JOIN request_infos ri ON t.request_info_id = ri.id
         LEFT JOIN users u ON t.user_id = u.id
         <where>
             <if test="title != null and title != ''">
@@ -59,14 +60,17 @@
                 AND u.username LIKE CONCAT('%', #{username}, '%')
             </if>
             <if test="stage != null">
-                AND t.stage = #{stage.name}
+                AND t.stage = #{stage}
+            </if>
+            <if test="productId != null">
+                AND t.product_id = #{productId}
             </if>
         </where>
         ORDER BY t.created_at DESC
     </select>
 
     <!-- 테스트 수정 -->
-    <update id="update" parameterType="Test">
+    <update id="update" parameterType="com.lims.lims_study.domain.test.model.Test">
         UPDATE tests
         SET request_info_id = #{requestInfoId},
             receipt_info_id = #{receiptInfoId},
@@ -84,5 +88,70 @@
         DELETE FROM tests
         WHERE id = #{id}
     </delete>
+
+    <!-- 전체 테스트 조회 -->
+    <select id="findAll" resultMap="TestResultMap">
+        SELECT id, request_info_id, receipt_info_id, result_info_id, completion_info_id,
+               user_id, product_id, stage, created_at, updated_at
+        FROM tests
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 사용자별 테스트 조회 -->
+    <select id="findByUserId" parameterType="long" resultMap="TestResultMap">
+        SELECT id, request_info_id, receipt_info_id, result_info_id, completion_info_id,
+               user_id, product_id, stage, created_at, updated_at
+        FROM tests
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 대시보드용 쿼리들 -->
+    <!-- 전체 시험 수 -->
+    <select id="countAllTests" resultType="long">
+        SELECT COUNT(*) FROM tests
+    </select>
+
+    <!-- 대기 중인 시험 수 (REQUEST, RECEIPT, RECEIPT_APPROVAL, RESULT_INPUT 단계) -->
+    <select id="countPendingTests" resultType="long">
+        SELECT COUNT(*) FROM tests
+        WHERE stage IN ('REQUEST', 'RECEIPT', 'RECEIPT_APPROVAL', 'RESULT_INPUT')
+    </select>
+
+    <!-- 완료된 시험 수 -->
+    <select id="countCompletedTests" resultType="long">
+        SELECT COUNT(*) FROM tests
+        WHERE stage = 'COMPLETED'
+    </select>
+
+    <!-- 내 시험 수 (현재 사용자가 의뢰한 시험) -->
+    <select id="countMyTests" parameterType="long" resultType="long">
+        SELECT COUNT(*) FROM tests
+        WHERE user_id = #{requesterId}
+    </select>
+
+    <!-- 단계별 시험 수 -->
+    <select id="countByStage" parameterType="string" resultType="long">
+        SELECT COUNT(*) FROM tests
+        WHERE stage = #{stage}
+    </select>
+
+    <!-- 최근 시험 조회 (대시보드용) -->
+    <select id="findRecentTests" parameterType="int" resultType="com.lims.lims_study.application.test.dto.RecentTestDto">
+        SELECT
+            t.id,
+            t.stage,
+            t.created_at as createdAt,
+            t.updated_at as updatedAt,
+            ri.title,
+            u.username as requesterName,
+            p.name as productName
+        FROM tests t
+        LEFT JOIN request_infos ri ON t.request_info_id = ri.id
+        LEFT JOIN users u ON t.user_id = u.id
+        LEFT JOIN products p ON t.product_id = p.id
+        ORDER BY t.created_at DESC
+        LIMIT #{limit}
+    </select>
 
 </mapper>

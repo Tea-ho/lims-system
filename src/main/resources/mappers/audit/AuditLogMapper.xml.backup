@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lims.lims_study.global.audit.AuditLogRepository">
+
+    <resultMap id="AuditLogResultMap" type="com.lims.lims_study.global.audit.AuditLog">
+        <id property="id" column="id"/>
+        <result property="entityType" column="entity_type"/>
+        <result property="entityId" column="entity_id"/>
+        <result property="action" column="action"/>
+        <result property="oldValues" column="old_values"/>
+        <result property="newValues" column="new_values"/>
+        <result property="userId" column="user_id"/>
+        <result property="ipAddress" column="ip_address"/>
+        <result property="userAgent" column="user_agent"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.lims.lims_study.global.audit.AuditLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO audit_logs (entity_type, entity_id, action, old_values, new_values, user_id, ip_address, user_agent, created_at)
+        VALUES (#{entityType}, #{entityId}, #{action}, #{oldValues}, #{newValues}, #{userId}, #{ipAddress}, #{userAgent}, #{createdAt})
+    </insert>
+
+    <select id="findByEntityTypeAndEntityId" resultMap="AuditLogResultMap">
+        SELECT id, entity_type, entity_id, action, old_values, new_values, user_id, ip_address, user_agent, created_at
+        FROM audit_logs
+        WHERE entity_type = #{entityType} AND entity_id = #{entityId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findByUserId" resultMap="AuditLogResultMap">
+        SELECT id, entity_type, entity_id, action, old_values, new_values, user_id, ip_address, user_agent, created_at
+        FROM audit_logs
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="findByAction" resultMap="AuditLogResultMap">
+        SELECT id, entity_type, entity_id, action, old_values, new_values, user_id, ip_address, user_agent, created_at
+        FROM audit_logs
+        WHERE action = #{action}
+        AND created_at BETWEEN #{startDate} AND #{endDate}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findSecurityEvents" resultMap="AuditLogResultMap">
+        SELECT id, entity_type, entity_id, action, old_values, new_values, user_id, ip_address, user_agent, created_at
+        FROM audit_logs
+        WHERE action IN ('LOGIN', 'LOGOUT', 'LOGIN_FAILED', 'PASSWORD_CHANGE')
+        AND created_at BETWEEN #{startDate} AND #{endDate}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="countByDateRange" resultType="long">
+        SELECT COUNT(*)
+        FROM audit_logs
+        WHERE created_at BETWEEN #{startDate} AND #{endDate}
+    </select>
+
+    <delete id="deleteOldLogs">
+        DELETE FROM audit_logs
+        WHERE created_at < #{beforeDate}
+    </delete>
+</mapper>

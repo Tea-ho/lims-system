@@ -58,4 +58,74 @@
         </where>
     </select>
 
+    <!-- 사용자 검색 (페이징 지원) -->
+    <select id="searchUsers" parameterType="com.lims.lims_study.application.user.dto.UserSearchDto" resultMap="UserResultMap">
+        SELECT id, username, password, authorities, created_at, updated_at
+        FROM users
+        <where>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="authorities != null and authorities != ''">
+                AND authorities = #{authorities}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 사용자 검색 결과 총 개수 -->
+    <select id="countSearchUsers" parameterType="com.lims.lims_study.application.user.dto.UserSearchDto" resultType="long">
+        SELECT COUNT(*)
+        FROM users
+        <where>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="authorities != null and authorities != ''">
+                AND authorities = #{authorities}
+            </if>
+        </where>
+    </select>
+
+    <!-- 검색 조건에 따른 사용자 수 조회 -->
+    <select id="countBySearchCriteria" parameterType="com.lims.lims_study.application.user.dto.UserSearchDto" resultType="long">
+        SELECT COUNT(*)
+        FROM users
+        <where>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="authorities != null and authorities != ''">
+                AND authorities = #{authorities}
+            </if>
+        </where>
+    </select>
+
+    <!-- 모든 사용자 조회 -->
+    <select id="findAll" resultMap="UserResultMap">
+        SELECT id, username, password, authorities, created_at, updated_at
+        FROM users
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 사용자명 존재 여부 확인 -->
+    <select id="existsByUsername" parameterType="string" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM users
+        WHERE username = #{username}
+    </select>
+
+    <!-- ID 존재 여부 확인 -->
+    <select id="existsById" parameterType="long" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM users
+        WHERE id = #{id}
+    </select>
+
+    <!-- 전체 사용자 수 조회 -->
+    <select id="countAllUsers" resultType="long">
+        SELECT COUNT(*) FROM users
+    </select>
+
 </mapper>

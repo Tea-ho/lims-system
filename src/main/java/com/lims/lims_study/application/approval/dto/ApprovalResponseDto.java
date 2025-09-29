@@ -8,15 +8,17 @@ import java.util.List;
 public class ApprovalResponseDto {
     private final Long id;
     private final ApprovalStatus status;
+    private final Long version;           // 동시성 제어를 위한 버전 정보
     private final ApprovalRequestDto request;
     private final List<ApprovalSignDto> signs;
     private final String createdAt;
     private final String updatedAt;
 
-    public ApprovalResponseDto(Long id, ApprovalStatus status, ApprovalRequestDto request,
+    public ApprovalResponseDto(Long id, ApprovalStatus status, Long version, ApprovalRequestDto request,
                                List<ApprovalSignDto> signs, String createdAt, String updatedAt) {
         this.id = id;
         this.status = status;
+        this.version = version;
         this.request = request;
         this.signs = signs;
         this.createdAt = createdAt;
@@ -79,6 +81,7 @@ public class ApprovalResponseDto {
     // Getters
     public Long getId() { return id; }
     public ApprovalStatus getStatus() { return status; }
+    public Long getVersion() { return version; }
     public ApprovalRequestDto getRequest() { return request; }
     public List<ApprovalSignDto> getSigns() { return signs; }
     public String getCreatedAt() { return createdAt; }

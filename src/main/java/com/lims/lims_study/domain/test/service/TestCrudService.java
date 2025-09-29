@@ -1,5 +1,6 @@
 package com.lims.lims_study.domain.test.service;
 
+import com.lims.lims_study.application.test.dto.TestSearchDto;
 import com.lims.lims_study.application.test.dto.TestUpdateDto;
 import com.lims.lims_study.domain.test.model.RequestInfo;
 import com.lims.lims_study.domain.test.model.TestStage;
@@ -62,8 +63,8 @@ public class TestCrudService implements ITestCrudService {
     }
 
     @Override
-    public List<Test> findBySearchConditions(String title, String username, TestStage stage) {
-        return test.findBySearchConditions(title, username, stage);
+    public List<Test> findBySearchConditions(TestSearchDto searchDto) {
+        return test.findBySearchConditions(searchDto);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.lims.lims_study.application.approval.service;
 import com.lims.lims_study.application.approval.dto.ApprovalCreateDto;
 import com.lims.lims_study.application.approval.dto.ApprovalResponseDto;
 import com.lims.lims_study.application.approval.dto.ApprovalSignUpdateDto;
+import com.lims.lims_study.domain.approval.model.ApprovalStatus;
 import com.lims.lims_study.domain.approval.service.IApprovalService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -41,5 +42,10 @@ public class ApprovalApplicationService implements IApprovalApplicationService {
     @Override
     public List<ApprovalResponseDto> getApprovalsByTarget(Long targetId) {
         return approvalService.getApprovalsByTarget(targetId);
+    }
+
+    @Override
+    public List<ApprovalResponseDto> getPendingApprovals(ApprovalStatus status, String search) {
+        return approvalService.getPendingApprovals(status, search);
     }
 }

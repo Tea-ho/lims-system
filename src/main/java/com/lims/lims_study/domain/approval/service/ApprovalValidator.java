@@ -40,7 +40,6 @@ public class ApprovalValidator {
             }
         }
     }
-
     public Approval findAndVerifyApproval(Long approvalId) {
         return approvalRepository.findById(approvalId)
                 .orElseThrow(() -> new IllegalArgumentException("Approval not found: " + approvalId));

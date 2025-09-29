@@ -36,7 +36,7 @@ public class TestDtoMapper {
         return new TestResponseDto.RequestInfoDto(
                 requestInfo.getTitle(),
                 requestInfo.getDescription(),
-                requestInfo.isRequiresApproval()
+                false // Default value since RequestInfo no longer has requiresApproval field
         );
     }
 
@@ -74,7 +74,9 @@ public class TestDtoMapper {
         return new UserResponseDto(
                 user.getId(),
                 user.getUsername(),
-                user.getAuthorities()
+                user.getAuthorities(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
         );
     }
 

@@ -13,9 +13,15 @@ public class ProductDtoMapper {
                 product.getId(),
                 product.getName(),
                 product.getDescription(),
-                product.getCreatedAt().toString(),
+                mapCreatedAt(product.getCreatedAt()),
                 mapUpdatedAt(product.getUpdatedAt())
         );
+    }
+
+    private String mapCreatedAt(Object createdAt) {
+        return Optional.ofNullable(createdAt)
+                .map(Object::toString)
+                .orElse(null);
     }
 
     private String mapUpdatedAt(Object updatedAt) {
