@@ -1,0 +1,27 @@
+<!-- resources/mappers/test/ResultInfoRepository.xml -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lims.lims_study.domain.test.repository.ResultInfoRepository">
+
+    <resultMap id="ResultInfoResultMap" type="ResultInfo">
+        <id property="id" column="id"/>
+        <result property="resultData" column="result_data"/>
+        <result property="requiresApproval" column="requires_approval"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="ResultInfo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO result_infos (result_data, requires_approval, approval_id)
+        VALUES (#{resultData}, #{requiresApproval}, #{approvalId})
+    </insert>
+
+    <update id="update" parameterType="ResultInfo">
+        UPDATE result_infos
+        SET result_data = #{resultData},
+            requires_approval = #{requiresApproval},
+            approval_id = #{approvalId}
+        WHERE id = #{id}
+    </update>
+
+    <select id="findById" resultMap="ResultInfoResultMap">
+        SELECT * FROM result_infos WHERE id = #{id}
+    </select>
+</mapper>

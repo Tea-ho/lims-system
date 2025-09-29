@@ -1,0 +1,27 @@
+<!-- resources/mappers/test/CompletionInfoRepository.xml -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lims.lims_study.domain.test.repository.CompletionInfoRepository">
+
+    <resultMap id="CompletionInfoResultMap" type="CompletionInfo">
+        <id property="id" column="id"/>
+        <result property="completionNotes" column="completion_notes"/>
+        <result property="requiresApproval" column="requires_approval"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="CompletionInfo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO completion_infos (completion_notes, requires_approval, approval_id)
+        VALUES (#{completionNotes}, #{requiresApproval}, #{approvalId})
+    </insert>
+
+    <update id="update" parameterType="CompletionInfo">
+        UPDATE completion_infos
+        SET completion_notes = #{completionNotes},
+            requires_approval = #{requiresApproval},
+            approval_id = #{approvalId}
+        WHERE id = #{id}
+    </update>
+
+    <select id="findById" resultMap="CompletionInfoResultMap">
+        SELECT * FROM completion_infos WHERE id = #{id}
+    </select>
+</mapper>
