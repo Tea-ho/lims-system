@@ -3,10 +3,14 @@ plugins {
 	id 'org.springframework.boot' version '2.7.18'
 	id 'io.spring.dependency-management' version '1.1.4'
 	id 'org.asciidoctor.jvm.convert' version '3.3.2'
+	id 'jacoco'
+	id 'org.flywaydb.flyway' version '8.5.13'
 }
 
 group = 'com.lims.lims_study'
 version = '0.0.1-SNAPSHOT'
+description = 'LIMS Study Application'
+
 def snippetsDir = file('build/generated-snippets')
 
 java {
@@ -15,34 +19,96 @@ java {
 	}
 }
 
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
 repositories {
 	mavenCentral()
 }
 
 dependencies {
+	// Spring Boot Starters
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
-	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.3.2'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
+	
+	// JSP Support
+	implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
+	implementation 'javax.servlet:jstl'
+	
+	// Database
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.3.2'
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-mysql'
+	runtimeOnly 'mysql:mysql-connector-java:8.0.33'
+	
+	// JWT
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-	implementation 'javax.validation:validation-api:2.0.1.Final'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	
+	// Utilities
 	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'mysql:mysql-connector-java:8.0.33'
 	annotationProcessor 'org.projectlombok:lombok'
+	
+	// Swagger/OpenAPI
+	implementation 'org.springdoc:springdoc-openapi-ui:1.6.15'
+	implementation 'org.springdoc:springdoc-openapi-security:1.6.15'
+	
+	// Cache
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
+	implementation 'com.github.ben-manes.caffeine:caffeine'
+	
+	// Event
+	implementation 'org.springframework:spring-context'
+	
+	// Development Tools
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	
+	// Test Dependencies
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:2.3.2'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
 	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+	testImplementation 'com.h2database:h2'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 test {
 	useJUnitPlatform()
 	outputs.dir snippetsDir
+	finalizedBy jacocoTestReport
+}
+
+jacoco {
+	toolVersion = "0.8.8"
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		html.required = true
+		csv.required = false
+	}
+	
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: [
+				'**/*Application*',
+				'**/*Config*',
+				'**/*Exception*',
+				'**/*Dto*',
+				'**/domain/**/model/**'
+			])
+		}))
+	}
 }
 
 asciidoctor {
@@ -58,4 +124,73 @@ asciidoctor {
 bootJar {
 	archiveFileName = "lims-study-${version}.jar"
 	dependsOn test, asciidoctor
+	
+	// 문서를 JAR에 포함
+	from ("${asciidoctor.outputDir}/html5") {
+		into 'static/docs'
+	}
+}
+
+jar {
+	enabled = false
+}
+
+// 코드 품질 검사
+task checkCodeQuality {
+	dependsOn test, jacocoTestReport
+	description = 'Run all code quality checks'
+	group = 'verification'
+}
+
+// 개발용 태스크
+task dev {
+	dependsOn bootRun
+	description = 'Run application in development mode'
+	group = 'application'
+}
+
+// 운영용 빌드
+task prodBuild {
+	dependsOn clean, test, bootJar
+	description = 'Build application for production'
+	group = 'build'
+}
+
+// 프로파일별 실행
+task runLocal {
+	dependsOn bootRun
+	bootRun.args = ['--spring.profiles.active=local']
+	description = 'Run application with local profile'
+	group = 'application'
+}
+
+// 테스트 리포트 생성
+task testReport {
+	dependsOn test, jacocoTestReport
+	description = 'Generate test reports'
+	group = 'verification'
+}
+
+// 문서 생성
+task docs {
+	dependsOn asciidoctor
+	description = 'Generate documentation'
+	group = 'documentation'
+}
+
+// Flyway 설정
+flyway {
+	url = 'jdbc:mysql://127.0.0.1:3306/lims_study?serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true'
+	user = 'lims_study'
+	password = 'rlaxogh123!'
+	locations = ['classpath:db/migration']
+	cleanDisabled = false
+}
+
+configurations {
+	flywayRuntime
+}
+
+dependencies {
+	flywayRuntime 'mysql:mysql-connector-java:8.0.33'
 }

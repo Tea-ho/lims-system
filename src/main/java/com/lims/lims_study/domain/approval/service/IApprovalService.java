@@ -3,6 +3,7 @@ package com.lims.lims_study.domain.approval.service;
 import com.lims.lims_study.application.approval.dto.ApprovalCreateDto;
 import com.lims.lims_study.application.approval.dto.ApprovalResponseDto;
 import com.lims.lims_study.application.approval.dto.ApprovalSignUpdateDto;
+import com.lims.lims_study.domain.approval.model.ApprovalStatus;
 
 import java.util.List;
 
@@ -12,4 +13,5 @@ public interface IApprovalService {
     void deleteApproval(Long approvalId);
     ApprovalResponseDto getApproval(Long approvalId);
     List<ApprovalResponseDto> getApprovalsByTarget(Long targetId);
+    List<ApprovalResponseDto> getPendingApprovals(ApprovalStatus status, String search);
 }

@@ -1,17 +1,18 @@
-# 서버 설정 (기본 port, 에러 관리, 인코딩 설정)
+# 서버 설정
 server:
-  port: 8083
+  port: 8089
+  address: 0.0.0.0
   error:
     whitelabel:
-      enabled: false  # Whitelabel 에러 페이지 비활성화
-    path: /error      # 추후 에러별로 경로 설정 필요
+      enabled: false
+    path: /error
   servlet:
     encoding:
-      charset: UTF-8   # 문자 인코딩 설정
-      enabled: true    # 인코딩 활성화
-      force: true      # 강제로 UTF-8 적용
+      charset: UTF-8
+      enabled: true
+      force: true
 
-# Spring 기본 설정
+# Spring 설정
 spring:
   profiles:
     active: local
@@ -21,13 +22,27 @@ spring:
     view:
       prefix: /WEB-INF/views/
       suffix: .jsp
+  jackson:
+    time-zone: Asia/Seoul
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 # MyBatis 설정
 mybatis:
-  mapper-locations: classpath:mappers/*/*.xml
-  type-aliases-package: com.lims.lims_study.*.domain
+  mapper-locations: classpath:mappers/**/*.xml
+  type-aliases-package: com.lims.lims_study.domain.*.model
   configuration:
     map-underscore-to-camel-case: true
+    default-fetch-size: 100
+    default-statement-timeout: 30
+    # Enum 타입 핸들러 설정
+    default-enum-type-handler: org.apache.ibatis.type.EnumTypeHandler
   type-handlers-package: com.lims.lims_study.handler
 
 # 로깅 설정
@@ -35,15 +50,55 @@ logging:
   level:
     root: INFO
     com.lims.lims_study: DEBUG
-    org.springframework: INFO
+    org.springframework.security: INFO
+    org.springframework.web: INFO
     org.mybatis: DEBUG
-  file:
-    name: logs/lims_study.log
+    org.springframework.transaction: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    # %wEx를 %ex로 수정
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%ex"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 
-# JWT
+# JWT 설정
 jwt:
-  secret: sfdjio3fffa             # JWT secret key
-  expiration: 86400000            # 24시간
+  secret: ${JWT_SECRET:mySecretKeyForJwtTokenGenerationThatShouldBeLongEnoughForHS512AlgorithmWithAtLeast512BitsOfSecurityRequirement}
+  expiration: 86400000  # 24시간 (밀리초)
+
+# 관리자 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# 개발 환경별 설정
+---
+spring:
+  profiles: local
+
+# 서버 설정 (local 환경)
+server:
+  port: 8089
+
+# 데이터베이스 설정
+datasource:
+  url: jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+  driver-class-name: org.h2.Driver
+  username: sa
+  password:
+  hikari:
+    connection-init-sql: SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci
+h2:
+  console:
+    enabled: true
+
+---
+spring:
+  profiles: prod
+logging:
+  level:
+    root: WARN
+    com.lims.lims_study: INFO

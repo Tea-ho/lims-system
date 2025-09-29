@@ -1,48 +1,110 @@
 package com.lims.lims_study.global.config;
 
+import com.lims.lims_study.global.exception.BusinessException;
+import com.lims.lims_study.global.exception.ErrorCode;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+@Slf4j
 @Component
 public class JwtProvider {
 
-    @Value("${jwt.secret}")
-    private String secret;
+    private final SecretKey secretKey;
+    private final long expiration;
 
-    @Value("${jwt.expiration}")
-    private Long expiration;
+    public JwtProvider(@Value("${jwt.secret}") String secret, 
+                      @Value("${jwt.expiration}") long expiration) {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expiration = expiration;
+    }
 
-    public String generateToken(String username) {
+    /**
+     * JWT 토큰 생성
+     */
+    public String generateToken(Authentication authentication) {
+        String username;
+        if (authentication.getPrincipal() instanceof UserDetails) {
+            UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
+            username = userPrincipal.getUsername();
+        } else {
+            username = (String) authentication.getPrincipal();
+        }
+
+        Date expiryDate = new Date(System.currentTimeMillis() + expiration);
+
         return Jwts.builder()
-                .setSubject(username) // JWT의 subject를 사용자 이름으로 설정
-                .setIssuedAt(new Date()) // 토큰 발급 시간 설정
-                .setExpiration(new Date(System.currentTimeMillis() + expiration)) // 만료 시간 설정
-                .signWith(SignatureAlgorithm.HS512, secret) // 서명 알고리즘과 비밀 키 설정
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(expiryDate)
+                .signWith(secretKey, SignatureAlgorithm.HS512)
                 .compact();
     }
 
-
+    /**
+     * JWT 토큰에서 사용자명 추출
+     */
     public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(secret) // 서명 검증을 위한 비밀 키 설정
-                .parseClaimsJws(token) // JWT 파싱 및 검증
-                .getBody(); // 토큰의 본문(Claims) 가져오기
-
-        return claims.getSubject(); // JWT에서 subject(사용자 이름) 추출
+        Claims claims = getClaims(token);
+        return claims.getSubject();
     }
 
-
+    /**
+     * JWT 토큰 유효성 검증
+     */
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secret).parseClaimsJws(token); // JWT의 유효성을 검증
+            getClaims(token);
             return true;
+        } catch (ExpiredJwtException e) {
+            log.error("JWT token is expired: {}", e.getMessage());
+            throw new BusinessException(ErrorCode.EXPIRED_TOKEN);
+        } catch (UnsupportedJwtException e) {
+            log.error("JWT token is unsupported: {}", e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        } catch (MalformedJwtException e) {
+            log.error("JWT token is malformed: {}", e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
         } catch (Exception e) {
-            return false;
+            log.error("JWT token validation error: {}", e.getMessage());
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
+    }
+
+    /**
+     * JWT 토큰에서 만료 시간 추출
+     */
+    public Date getExpirationFromToken(String token) {
+        Claims claims = getClaims(token);
+        return claims.getExpiration();
+    }
+
+    /**
+     * JWT 토큰이 만료되었는지 확인
+     */
+    public boolean isTokenExpired(String token) {
+        Date expiration = getExpirationFromToken(token);
+        return expiration.before(new Date());
+    }
+
+    private Claims getClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

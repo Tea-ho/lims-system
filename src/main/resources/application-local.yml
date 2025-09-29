@@ -1,10 +1,84 @@
+server:
+  port: 8089
+
 spring:
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/lims_study?serverTimezone=UTC
+    url: jdbc:mysql://127.0.0.1:3306/lims_study?serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true&cachePrepStmts=true&useServerPrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048
     username: lims_study
     password: rlaxogh123!
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # Flyway 마이그레이션 설정 (로컬 환경에서는 완전 비활성화)
+  flyway:
+    enabled: false
+    validate-on-migrate: false
+    baseline-on-migrate: false
+    out-of-order: false
+
+  # 데이터 초기화 설정 (DataInitializationService 사용으로 비활성화)
+  sql:
+    init:
+      mode: never
+      # data-locations: classpath:data.sql
+      continue-on-error: true
+    
+    # HikariCP 최적화 설정
     hikari:
-      maximum-pool-size: 15 #유의사항: 프로젝트 규모 고려하여 설정
-      minimum-idle: 5
-      idle-timeout: 28800 #유의사항: DB 커넥션과 일치시켜야함 (mySql 명령어: show global variables like '%timeout')
+      # 커넥션 풀 크기 설정
+      maximum-pool-size: 20          # 최대 커넥션 수
+      minimum-idle: 5                # 최소 유휴 커넥션 수
+      
+      # 타임아웃 설정
+      connection-timeout: 30000      # 커넥션 획득 대기 시간 (30초)
+      idle-timeout: 600000          # 유휴 커넥션 생존 시간 (10분)
+      max-lifetime: 1800000         # 커넥션 최대 생존 시간 (30분)
+      
+      # 검증 및 성능 설정
+      validation-timeout: 5000       # 커넥션 유효성 검사 시간 (5초)
+      connection-test-query: SELECT 1
+      
+      # 리크 감지 설정
+      leak-detection-threshold: 60000 # 리크 감지 임계값 (60초)
+      
+      # 풀 이름 설정
+      pool-name: LimsStudyHikariPool
+      
+      # 기타 최적화 설정
+      auto-commit: false             # 자동 커밋 비활성화
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+
+# Cache 설정
+cache:
+  caffeine:
+    spec: maximumSize=1000,expireAfterWrite=30m,recordStats
+  names:
+    - users
+    - products
+    - tests
+    - user-details
+    - product-details
+    - test-statistics
+
+# 성능 모니터링 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,hikaricp
+  endpoint:
+    health:
+      show-details: when_authorized
+      show-components: always
+    metrics:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+      sla:
+        http.server.requests: 100ms,500ms,1s

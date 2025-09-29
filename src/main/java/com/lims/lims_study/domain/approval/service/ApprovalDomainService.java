@@ -11,6 +11,7 @@ import com.lims.lims_study.domain.approval.repository.ApprovalRepository;
 import com.lims.lims_study.domain.approval.repository.ApprovalRequestRepository;
 import com.lims.lims_study.domain.approval.repository.ApprovalSignRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ApprovalDomainService implements IApprovalService {
     private final ApprovalRepository approvalRepository;
     private final ApprovalRequestRepository approvalRequestRepository;
@@ -46,16 +48,59 @@ public class ApprovalDomainService implements IApprovalService {
     @Transactional
     public ApprovalResponseDto updateApprovalSign(Long approvalId, Long signId, ApprovalSignUpdateDto dto) {
         approvalValidator.checkStatusForSignUpdate(dto);
-        Approval approval = approvalValidator.findAndVerifyApproval(approvalId);
-        ApprovalSign sign = approvalValidator.findAndVerifyApprovalSign(approvalId, signId);
+        
+        // 동시성 제어를 위한 재시도 로직 (Optimistic Locking)
+        int maxRetries = 3;
+        int retryCount = 0;
+        
+        while (retryCount < maxRetries) {
+            try {
+                Approval approval = approvalValidator.findAndVerifyApproval(approvalId);
+                ApprovalSign sign = approvalValidator.findAndVerifyApprovalSign(approvalId, signId);
+                Long currentVersion = approval.getVersion();
 
-        sign.update(dto.getStatus(), dto.getComment());
-        approvalSignRepository.update(sign);
+                // 승인 서명 업데이트
+                sign.update(dto.getStatus(), dto.getComment());
+                approvalSignRepository.update(sign);
 
-        updateApprovalStatus(approval);
-        approvalRepository.update(approval);
-
-        return buildResponseDto(approval);
+                // 전체 승인 상태 업데이트
+                updateApprovalStatus(approval);
+                
+                // 버전 기반 업데이트 (동시성 체크)
+                int updatedRows = approvalRepository.updateWithVersion(approval, currentVersion);
+                
+                if (updatedRows == 1) {
+                    // 성공: 업데이트된 승인 정보 반환
+                    Approval updatedApproval = approvalValidator.findAndVerifyApproval(approvalId);
+                    return buildResponseDto(updatedApproval);
+                } else {
+                    // 버전 충돌: 재시도
+                    retryCount++;
+                    log.warn("승인 업데이트 동시성 충돌 발생. approvalId: {}, 재시도: {}/{}", 
+                            approvalId, retryCount, maxRetries);
+                    
+                    if (retryCount >= maxRetries) {
+                        log.error("승인 업데이트 최대 재시도 초과. approvalId: {}", approvalId);
+                        throw new IllegalStateException(
+                            "동시성 충돌로 인해 승인 업데이트에 실패했습니다. 다시 시도해주세요.");
+                    }
+                    
+                    // 재시도 전 잠시 대기 (50ms)
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException("인터럽트가 발생했습니다.", e);
+                    }
+                }
+            } catch (IllegalStateException e) {
+                throw e; // 동시성 오류는 그대로 전파
+            } catch (Exception e) {
+                throw new RuntimeException("승인 업데이트 중 오류가 발생했습니다.", e);
+            }
+        }
+        
+        throw new IllegalStateException("최대 재시도 횟수를 초과했습니다.");
     }
 
     @Override
@@ -81,16 +126,58 @@ public class ApprovalDomainService implements IApprovalService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<ApprovalResponseDto> getPendingApprovals(ApprovalStatus status, String search) {
+        List<Approval> approvals;
+        if (status != null) {
+            approvals = approvalRepository.findByStatus(status);
+        } else {
+            approvals = approvalRepository.findPendingApprovals();
+        }
+
+        return approvals.stream()
+                .map(this::buildResponseDto)
+                .filter(approval -> search == null || search.isEmpty() ||
+                       approval.getRequest().getComment().toLowerCase().contains(search.toLowerCase()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 전체 승인 상태 업데이트 (전원 승인제)
+     * - 모든 승인자가 승인해야 전체 승인
+     * - 한 명이라도 반려하면 전체 반려
+     * - 부분 승인 상태 지원
+     */
     private void updateApprovalStatus(Approval approval) {
         List<ApprovalSign> signs = approvalSignRepository.findByApprovalId(approval.getId());
-        boolean hasApproved = signs.stream().anyMatch(sign -> sign.getStatus() == ApprovalStatus.APPROVED);
-        boolean hasRejected = signs.stream().anyMatch(sign -> sign.getStatus() == ApprovalStatus.REJECTED);
-
-        if (hasRejected) {
+        
+        if (signs.isEmpty()) {
+            approval.updateStatus(ApprovalStatus.PENDING);
+            return;
+        }
+        
+        long totalSigns = signs.size();
+        long approvedCount = signs.stream()
+                .filter(sign -> sign.getStatus() == ApprovalStatus.APPROVED)
+                .count();
+        long rejectedCount = signs.stream()
+                .filter(sign -> sign.getStatus() == ApprovalStatus.REJECTED)
+                .count();
+        
+        // 한 명이라도 반려 → 전체 반려
+        if (rejectedCount > 0) {
             approval.updateStatus(ApprovalStatus.REJECTED);
-        } else if (hasApproved) {
+        }
+        // 모든 승인자가 승인 → 전체 승인
+        else if (approvedCount == totalSigns) {
             approval.updateStatus(ApprovalStatus.APPROVED);
-        } else {
+        }
+        // 일부만 승인 → 부분 승인
+        else if (approvedCount > 0) {
+            approval.updateStatus(ApprovalStatus.PARTIAL_APPROVED);
+        }
+        // 아무도 승인하지 않음 → 대기
+        else {
             approval.updateStatus(ApprovalStatus.PENDING);
         }
     }
@@ -117,6 +204,7 @@ public class ApprovalDomainService implements IApprovalService {
         return new ApprovalResponseDto(
                 approval.getId(),
                 approval.getStatus(),
+                approval.getVersion(),    // 버전 정보 추가
                 new ApprovalResponseDto.ApprovalRequestDto(
                         request.getRequesterId(),
                         request.getComment(),

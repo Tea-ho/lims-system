@@ -47,7 +47,17 @@ public class ProductApplicationService implements IProductApplicationService {
 
     @Override
     public List<ProductResponseDto> searchProducts(ProductSearchDto dto) {
-        List<Product> products = productService.searchProducts(dto.getName());
+        String searchName = (dto != null && dto.getName() != null && !dto.getName().trim().isEmpty())
+                          ? dto.getName() : null;
+        List<Product> products = productService.searchProducts(searchName);
+        return products.stream()
+                .map(productDtoMapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProductResponseDto> getAllProducts() {
+        List<Product> products = productService.findAllProducts();
         return products.stream()
                 .map(productDtoMapper::toResponseDto)
                 .collect(Collectors.toList());

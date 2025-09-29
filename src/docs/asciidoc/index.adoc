@@ -1,0 +1,46 @@
+= LIMS API Documentation
+:icons: font
+:doctype: book
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 2
+:seclinks
+
+== User API
+
+=== Register User
+include::{snippets}/user-register/http-request.adoc[]
+include::{snippets}/user-register/request-fields.adoc[]
+include::{snippets}/user-register/http-response.adoc[]
+include::{snippets}/user-register/response-fields.adoc[]
+
+=== update User
+include::{snippets}/user-update/http-request.adoc[]
+include::{snippets}/user-update/request-fields.adoc[]
+include::{snippets}/user-update/http-response.adoc[]
+include::{snippets}/user-update/response-fields.adoc[]
+
+== Product API
+
+=== Create Product
+include::{snippets}/product-create/http-request.adoc[]
+include::{snippets}/product-create/request-fields.adoc[]
+include::{snippets}/product-create/http-response.adoc[]
+include::{snippets}/product-create/response-fields.adoc[]
+
+== Test API
+
+=== Create Test
+include::{snippets}/test-create/http-request.adoc[]
+include::{snippets}/test-create/request-fields.adoc[]
+include::{snippets}/test-create/http-response.adoc[]
+include::{snippets}/test-create/response-fields.adoc[]
+
+== Approval API
+
+=== Create Approval
+// include::{snippets}/approval-create/http-request.adoc[]
+// include::{snippets}/approval-create/request-fields.adoc[]
+// include::{snippets}/approval-create/http-response.adoc[]
+// include::{snippets}/approval-create/response-fields.adoc[]
+

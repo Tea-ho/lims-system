@@ -4,12 +4,15 @@ import com.lims.lims_study.application.approval.dto.ApprovalCreateDto;
 import com.lims.lims_study.application.approval.dto.ApprovalResponseDto;
 import com.lims.lims_study.application.approval.dto.ApprovalSignUpdateDto;
 import com.lims.lims_study.application.approval.service.IApprovalApplicationService;
+import com.lims.lims_study.domain.approval.model.ApprovalStatus;
+import com.lims.lims_study.global.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/approvals")
@@ -49,5 +52,30 @@ public class ApprovalController {
     public ResponseEntity<List<ApprovalResponseDto>> getApprovalsByTarget(@PathVariable Long targetId) {
         List<ApprovalResponseDto> responses = approvalService.getApprovalsByTarget(targetId);
         return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<ApiResponse<List<ApprovalResponseDto>>> getPendingApprovals(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) ApprovalStatus status,
+            @RequestParam(required = false) String search) {
+
+        List<ApprovalResponseDto> approvals = approvalService.getPendingApprovals(status, search);
+        ApiResponse<List<ApprovalResponseDto>> response = ApiResponse.success(approvals);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{approvalId}/process")
+    public ResponseEntity<ApiResponse<ApprovalResponseDto>> processApproval(
+            @PathVariable Long approvalId,
+            @RequestBody Map<String, String> request) {
+
+        ApprovalStatus status = ApprovalStatus.valueOf(request.get("status"));
+        String comment = request.get("comment");
+
+        // TODO: Implement processApproval method in service
+        ApprovalResponseDto response = approvalService.getApproval(approvalId);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

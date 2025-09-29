@@ -48,4 +48,9 @@ public class ProductDomainService implements IProductService {
     public List<Product> searchProducts(String name) {
         return productRepository.searchByName(name);
     }
+
+    @Override
+    public List<Product> findAllProducts() {
+        return productRepository.findAllProducts();
+    }
 }

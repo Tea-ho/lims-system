@@ -1,0 +1,35 @@
+# 테스트 환경 설정
+# 테스트 시 로그 레벨 조정
+logging:
+  level:
+    root: INFO
+    com.lims.lims_study: DEBUG
+    org.springframework: WARN
+    org.mybatis: WARN
+
+# JWT 테스트용 설정
+jwt:
+  secret: testSecretKeyForJwtTokenGenerationThatShouldBeLongEnoughForTesting
+  expiration: 86400000
+
+# 테스트용 데이터베이스 설정
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  
+  h2:
+    console:
+      enabled: false
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+# 테스트용 더미 데이터베이스 설정 (실제로는 사용하지 않음)
+management:
+  endpoints:
+    enabled-by-default: false

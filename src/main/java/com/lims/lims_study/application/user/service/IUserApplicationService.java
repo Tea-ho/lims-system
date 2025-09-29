@@ -1,8 +1,7 @@
 package com.lims.lims_study.application.user.service;
 
 import com.lims.lims_study.application.user.dto.*;
-
-import java.util.List;
+import com.lims.lims_study.global.common.PageResponse;
 
 public interface IUserApplicationService {
     UserResponseDto createUser(UserCreateDto dto);
@@ -10,5 +9,6 @@ public interface IUserApplicationService {
     void deleteUser(Long userId);
     UserResponseDto getUser(Long userId);
     UserResponseDto getCurrentUser();
-    List<UserResponseDto> searchUsers(UserSearchDto dto);
+    PageResponse<UserResponseDto> searchUsers(UserSearchDto dto);
+    boolean existsByUsername(String username);
 }

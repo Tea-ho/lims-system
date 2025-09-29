@@ -15,8 +15,7 @@
 
     <update id="update" parameterType="Approval">
         UPDATE approvals
-        SET status = #{status},
-            updated_at = #{updatedAt}
+        SET status = #{status}
         WHERE id = #{id}
     </update>
 
@@ -36,6 +35,11 @@
         FROM approvals a
                  JOIN approval_signs s ON a.id = s.approval_id
         WHERE s.target_id = #{targetId}
-        ORDER BY a.created_at DESC
+        ORDER BY a.id DESC
+    </select>
+
+    <!-- 대시보드용 쿼리 -->
+    <select id="countPendingApprovals" resultType="long">
+        SELECT COUNT(*) FROM approvals WHERE status = 'PENDING'
     </select>
 </mapper>
