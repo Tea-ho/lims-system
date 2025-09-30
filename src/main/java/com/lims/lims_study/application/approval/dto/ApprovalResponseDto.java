@@ -27,12 +27,14 @@ public class ApprovalResponseDto {
 
     public static class ApprovalRequestDto {
         private final Long requesterId;
+        private final String requesterName;  // 요청자 이름 추가
         private final String comment;
         private final String createdAt;
         private final String updatedAt;
 
-        public ApprovalRequestDto(Long requesterId, String comment, String createdAt, String updatedAt) {
+        public ApprovalRequestDto(Long requesterId, String requesterName, String comment, String createdAt, String updatedAt) {
             this.requesterId = requesterId;
+            this.requesterName = requesterName;
             this.comment = comment;
             this.createdAt = createdAt;
             this.updatedAt = updatedAt;
@@ -40,6 +42,7 @@ public class ApprovalResponseDto {
 
         // Getters
         public Long getRequesterId() { return requesterId; }
+        public String getRequesterName() { return requesterName; }
         public String getComment() { return comment; }
         public String getCreatedAt() { return createdAt; }
         public String getUpdatedAt() { return updatedAt; }

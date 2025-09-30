@@ -10,6 +10,10 @@ import com.lims.lims_study.domain.approval.model.ApprovalStatus;
 import com.lims.lims_study.domain.approval.repository.ApprovalRepository;
 import com.lims.lims_study.domain.approval.repository.ApprovalRequestRepository;
 import com.lims.lims_study.domain.approval.repository.ApprovalSignRepository;
+import com.lims.lims_study.domain.test.service.ITestCrudService;
+import com.lims.lims_study.domain.test.model.Test;
+import com.lims.lims_study.domain.user.model.User;
+import com.lims.lims_study.domain.user.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -26,6 +30,8 @@ public class ApprovalDomainService implements IApprovalService {
     private final ApprovalRequestRepository approvalRequestRepository;
     private final ApprovalSignRepository approvalSignRepository;
     private final ApprovalValidator approvalValidator;
+    private final IUserService userService;
+    private final ITestCrudService testCrudService;
 
     @Override
     @Transactional
@@ -150,12 +156,12 @@ public class ApprovalDomainService implements IApprovalService {
      */
     private void updateApprovalStatus(Approval approval) {
         List<ApprovalSign> signs = approvalSignRepository.findByApprovalId(approval.getId());
-        
+
         if (signs.isEmpty()) {
             approval.updateStatus(ApprovalStatus.PENDING);
             return;
         }
-        
+
         long totalSigns = signs.size();
         long approvedCount = signs.stream()
                 .filter(sign -> sign.getStatus() == ApprovalStatus.APPROVED)
@@ -163,10 +169,20 @@ public class ApprovalDomainService implements IApprovalService {
         long rejectedCount = signs.stream()
                 .filter(sign -> sign.getStatus() == ApprovalStatus.REJECTED)
                 .count();
-        
+
         // 한 명이라도 반려 → 전체 반려
         if (rejectedCount > 0) {
             approval.updateStatus(ApprovalStatus.REJECTED);
+
+            // Test를 RECEIPT 단계로 되돌림
+            if (!signs.isEmpty()) {
+                Long targetId = signs.get(0).getTargetId(); // 모든 sign의 targetId는 동일 (testId)
+                testCrudService.findById(targetId).ifPresent(test -> {
+                    log.info("🔙 Approval rejected, moving test {} back to RECEIPT stage", targetId);
+                    test.moveToPreviousStage(); // RECEIPT_APPROVAL -> RECEIPT
+                    testCrudService.updateTest(test);
+                });
+            }
         }
         // 모든 승인자가 승인 → 전체 승인
         else if (approvedCount == totalSigns) {
@@ -201,12 +217,26 @@ public class ApprovalDomainService implements IApprovalService {
                 .orElseThrow(() -> new IllegalArgumentException("Request not found for approval: " + approval.getId()));
         List<ApprovalSign> signs = approvalSignRepository.findByApprovalId(approval.getId());
 
+        // 요청자 정보 조회
+        log.info("🔍 Building response for approval: {}, requesterId: {}", approval.getId(), request.getRequesterId());
+        String requesterName = userService.findById(request.getRequesterId())
+                .map(user -> {
+                    log.info("✅ Found requester: {}", user.getUsername());
+                    return user.getUsername();
+                })
+                .orElseGet(() -> {
+                    log.warn("❌ Requester not found for ID: {}", request.getRequesterId());
+                    return "알 수 없는 사용자";
+                });
+        log.info("👤 Final requester name: {}", requesterName);
+
         return new ApprovalResponseDto(
                 approval.getId(),
                 approval.getStatus(),
                 approval.getVersion(),    // 버전 정보 추가
                 new ApprovalResponseDto.ApprovalRequestDto(
                         request.getRequesterId(),
+                        requesterName,
                         request.getComment(),
                         request.getCreatedAt().toString(),
                         request.getUpdatedAt().toString()

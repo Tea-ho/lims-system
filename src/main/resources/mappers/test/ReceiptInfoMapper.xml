@@ -10,14 +10,13 @@
 
     <insert id="insert" parameterType="ReceiptInfo" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO receipt_infos (receipt_details, requires_approval, approval_id)
-        VALUES (#{receiptDetails}, #{requiresApproval}, #{approvalId})
+        VALUES (#{receiptDetails}, #{requiresApproval}, NULL)
     </insert>
 
     <update id="update" parameterType="ReceiptInfo">
         UPDATE receipt_infos
         SET receipt_details = #{receiptDetails},
-            requires_approval = #{requiresApproval},
-            approval_id = #{approvalId}
+            requires_approval = #{requiresApproval}
         WHERE id = #{id}
     </update>
 

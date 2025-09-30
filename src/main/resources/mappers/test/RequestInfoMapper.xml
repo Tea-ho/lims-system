@@ -6,17 +6,19 @@
         <id property="id" column="id"/>
         <result property="title" column="title"/>
         <result property="description" column="description"/>
+        <result property="requiresApproval" column="requires_approval"/>
     </resultMap>
 
     <insert id="insert" parameterType="RequestInfo" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO request_infos (title, description)
-        VALUES (#{title}, #{description})
+        INSERT INTO request_infos (title, description, requires_approval)
+        VALUES (#{title}, #{description}, #{requiresApproval})
     </insert>
 
     <update id="update" parameterType="RequestInfo">
         UPDATE request_infos
         SET title = #{title},
-            description = #{description}
+            description = #{description},
+            requires_approval = #{requiresApproval}
         WHERE id = #{id}
     </update>
 
@@ -25,6 +27,6 @@
     </delete>
 
     <select id="findById" resultMap="RequestInfoResultMap">
-        SELECT id, title, description FROM request_infos WHERE id = #{id}
+        SELECT id, title, description, requires_approval FROM request_infos WHERE id = #{id}
     </select>
 </mapper>

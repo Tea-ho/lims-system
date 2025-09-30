@@ -14,6 +14,10 @@ public class Approval {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // MyBatis용 기본 생성자
+    public Approval() {
+    }
+
     public Approval(ApprovalStatus status) {
         this.status = status;
         this.version = 0L;          // 초기 버전
@@ -40,14 +44,19 @@ public class Approval {
         return this.version.equals(expectedVersion);
     }
 
-    // Getters
+    // Getters and Setters
     public Long getId() { return id; }
-    public ApprovalStatus getStatus() { return status; }
-    public Long getVersion() { return version; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-
-    // 테스트를 위한 setter (실제로는 Repository에서 설정)
     public void setId(Long id) { this.id = id; }
+
+    public ApprovalStatus getStatus() { return status; }
+    public void setStatus(ApprovalStatus status) { this.status = status; }
+
+    public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

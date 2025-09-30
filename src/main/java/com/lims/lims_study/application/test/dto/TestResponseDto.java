@@ -74,6 +74,14 @@ public class TestResponseDto {
             this.receiptDetails = receiptDetails;
             this.requiresApproval = requiresApproval;
         }
+
+        public String getReceiptDetails() {
+            return receiptDetails;
+        }
+
+        public boolean isRequiresApproval() {
+            return requiresApproval;
+        }
     }
 
     public static class ResultInfoDto {
@@ -84,6 +92,14 @@ public class TestResponseDto {
             this.resultData = resultData;
             this.requiresApproval = requiresApproval;
         }
+
+        public String getResultData() {
+            return resultData;
+        }
+
+        public boolean isRequiresApproval() {
+            return requiresApproval;
+        }
     }
 
     public static class CompletionInfoDto {
@@ -93,6 +109,14 @@ public class TestResponseDto {
         public CompletionInfoDto(String completionNotes, boolean requiresApproval) {
             this.completionNotes = completionNotes;
             this.requiresApproval = requiresApproval;
+        }
+
+        public String getCompletionNotes() {
+            return completionNotes;
+        }
+
+        public boolean isRequiresApproval() {
+            return requiresApproval;
         }
     }
 }

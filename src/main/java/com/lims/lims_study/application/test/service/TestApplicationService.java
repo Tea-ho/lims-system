@@ -17,6 +17,7 @@ import com.lims.lims_study.domain.user.service.IUserService;
 import com.lims.lims_study.global.util.AuthenticationProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -100,9 +101,12 @@ public class TestApplicationService implements ITestApplicationService {
     }
 
     @Override
+    @Transactional
     public TestResponseDto moveToReceipt(Long testId, ReceiptCreateDto dto) {
         ReceiptInfo receiptInfo = new ReceiptInfo(dto.getReceiptDetails(), dto.isRequiresApproval());
         testStateService.moveToReceipt(testId, receiptInfo);
+
+        // 트랜잭션 내에서 다시 조회하여 최신 정보 반영
         Test test = testCrudService.findById(testId)
                 .orElseThrow(() -> new IllegalArgumentException("TestRepository not found: " + testId));
         User user = userService.findById(test.getUserId())
@@ -111,7 +115,11 @@ public class TestApplicationService implements ITestApplicationService {
                 .orElseThrow(() -> new IllegalArgumentException("ProductRepository not found: " + test.getProductId()));
         RequestInfo requestInfo = testRequestCrudService.findById(test.getRequestInfoId())
                 .orElseThrow(() -> new IllegalStateException("Request info not found"));
-        return dtoMapper.toResponseDto(test, user, product, requestInfo, receiptInfo, null, null);
+        ReceiptInfo savedReceiptInfo = test.getReceiptInfoId() != null
+                ? testReceiptCrudService.findById(test.getReceiptInfoId()).orElse(receiptInfo)
+                : receiptInfo;
+
+        return dtoMapper.toResponseDto(test, user, product, requestInfo, savedReceiptInfo, null, null);
     }
 
     @Override

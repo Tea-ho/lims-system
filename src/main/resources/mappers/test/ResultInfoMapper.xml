@@ -10,14 +10,13 @@
 
     <insert id="insert" parameterType="ResultInfo" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO result_infos (result_data, requires_approval, approval_id)
-        VALUES (#{resultData}, #{requiresApproval}, #{approvalId})
+        VALUES (#{resultData}, #{requiresApproval}, NULL)
     </insert>
 
     <update id="update" parameterType="ResultInfo">
         UPDATE result_infos
         SET result_data = #{resultData},
-            requires_approval = #{requiresApproval},
-            approval_id = #{approvalId}
+            requires_approval = #{requiresApproval}
         WHERE id = #{id}
     </update>
 

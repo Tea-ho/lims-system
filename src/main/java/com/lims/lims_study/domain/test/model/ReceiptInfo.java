@@ -6,6 +6,10 @@ public class ReceiptInfo {
     private String receiptDetails;
     private boolean requiresApproval;
 
+    // MyBatis용 기본 생성자
+    public ReceiptInfo() {
+    }
+
     public ReceiptInfo(String receiptDetails, boolean requiresApproval) {
         this.receiptDetails = receiptDetails;
         this.requiresApproval = requiresApproval;

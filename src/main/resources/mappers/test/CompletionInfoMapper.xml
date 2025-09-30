@@ -10,14 +10,13 @@
 
     <insert id="insert" parameterType="CompletionInfo" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO completion_infos (completion_notes, requires_approval, approval_id)
-        VALUES (#{completionNotes}, #{requiresApproval}, #{approvalId})
+        VALUES (#{completionNotes}, #{requiresApproval}, NULL)
     </insert>
 
     <update id="update" parameterType="CompletionInfo">
         UPDATE completion_infos
         SET completion_notes = #{completionNotes},
-            requires_approval = #{requiresApproval},
-            approval_id = #{approvalId}
+            requires_approval = #{requiresApproval}
         WHERE id = #{id}
     </update>
 

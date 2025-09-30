@@ -219,6 +219,11 @@ class ApiService {
     return response.data.data;
   }
 
+  async processApproval(approvalId: number, data: { signId: string; status: string; comment: string }): Promise<Approval> {
+    const response = await this.api.put(`/approvals/${approvalId}/process`, data);
+    return response.data.data;
+  }
+
   // 검색 API
   async searchApprovals(query: string): Promise<Approval[]> {
     const response = await this.api.get('/approvals/search', { params: { q: query } });

@@ -21,11 +21,22 @@ public class TestStateService implements ITestStateService {
     @Override
     @Transactional
     public void moveToReceipt(Long testId, ReceiptInfo receiptInfo) {
+        System.out.println("🔧 moveToReceipt started - Test ID: " + testId);
+
         Test test = testValidator.validateTestExists(testId, testCrudService);
+        System.out.println("🔧 Test found - Current stage: " + test.getStage());
+
         testReceiptCrudService.insert(receiptInfo);
+        System.out.println("🔧 ReceiptInfo inserted - ID: " + receiptInfo.getId());
+
         test.setReceiptInfoId(receiptInfo.getId());
+        System.out.println("🔧 Receipt Info ID set to test: " + test.getReceiptInfoId());
+
         test.moveToNextStage();
+        System.out.println("🔧 Stage moved to: " + test.getStage());
+
         testCrudService.updateTest(test);
+        System.out.println("🔧 Test updated in DB");
     }
 
     @Override

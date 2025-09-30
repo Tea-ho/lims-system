@@ -36,15 +36,22 @@ const PendingApprovals: React.FC = () => {
       };
 
       const response = await apiService.getPendingApprovals(params);
-      console.log('API Response:', response);
+      console.log('👥 Pending Approvals API Response:', response);
+      console.log('👥 First approval:', response[0]);
+      console.log('👥 Request info:', response[0]?.request);
+      console.log('👥 Requester Name:', response[0]?.request?.requesterName);
+      console.log('👥 Request full object:', JSON.stringify(response[0]?.request, null, 2));
 
-      // 응답 구조 확인 및 안전한 데이터 설정
-      const approvalsData = response.data || [];
+      // ApiResponse 구조: { success, message, data }
+      // data가 List<ApprovalResponseDto>이므로 배열임
+      const approvalsData = Array.isArray(response) ? response : (response?.data || []);
+      console.log('👥 Final approvals data:', approvalsData);
+
       setApprovals(Array.isArray(approvalsData) ? approvalsData : []);
       setPagination(prev => ({
         ...prev,
-        total: response.total || 0,
-        totalPages: response.totalPages || 1
+        total: Array.isArray(approvalsData) ? approvalsData.length : 0,
+        totalPages: Math.ceil((Array.isArray(approvalsData) ? approvalsData.length : 0) / prev.limit)
       }));
     } catch (error) {
       console.error('승인 목록 조회 실패:', error);
@@ -54,22 +61,20 @@ const PendingApprovals: React.FC = () => {
     }
   };
 
-  const handleApproval = async (approvalId: number, action: 'APPROVED' | 'REJECTED', comment?: string) => {
+  const handleApproval = async (approvalId: number, signId: number, action: 'APPROVED' | 'REJECTED', comment?: string) => {
     if (processing.has(approvalId)) return;
 
     setProcessing(prev => new Set(prev).add(approvalId));
 
     try {
       await apiService.processApproval(approvalId, {
+        signId: signId.toString(),
         status: action,
         comment: comment || ''
       });
 
-      setApprovals(prev => prev.map(approval =>
-        approval.id === approvalId
-          ? { ...approval, status: action, processedAt: new Date().toISOString() }
-          : approval
-      ));
+      // 승인 목록 새로고침
+      await fetchApprovals();
 
       toast.success(`성공적으로 ${action === 'APPROVED' ? '승인' : '거부'}되었습니다.`);
     } catch (error) {
@@ -208,24 +213,24 @@ const PendingApprovals: React.FC = () => {
                 </div>
 
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {approval.type} 승인 요청
+                  승인 요청 #{approval.id}
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <User className="w-4 h-4" />
-                    <span>요청자: {approval.requesterName}</span>
+                    <span>요청자: {approval.request?.requesterName || 'N/A'}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Calendar className="w-4 h-4" />
-                    <span>요청일: {formatDate(approval.requestedAt)}</span>
+                    <span>요청일: {approval.request?.createdAt ? formatDate(approval.request.createdAt) : 'N/A'}</span>
                   </div>
                 </div>
 
-                {approval.description && (
+                {approval.request?.comment && (
                   <div className="flex items-start space-x-2 text-sm text-gray-600 mb-4">
                     <FileText className="w-4 h-4 mt-0.5" />
-                    <p>{approval.description}</p>
+                    <p>{approval.request.comment}</p>
                   </div>
                 )}
 
@@ -244,31 +249,46 @@ const PendingApprovals: React.FC = () => {
                 )}
               </div>
 
-              {approval.status === 'PENDING' && (
-                <div className="flex items-center space-x-2 ml-4">
-                  <button
-                    onClick={() => handleApproval(approval.id, 'APPROVED')}
-                    disabled={processing.has(approval.id)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center space-x-1"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    <span>승인</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      const comment = window.prompt('거부 사유를 입력하세요:');
-                      if (comment !== null) {
-                        handleApproval(approval.id, 'REJECTED', comment);
-                      }
-                    }}
-                    disabled={processing.has(approval.id)}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center space-x-1"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    <span>거부</span>
-                  </button>
-                </div>
-              )}
+              {approval.status === 'PENDING' && (() => {
+                // 현재 사용자 정보 가져오기
+                const userStr = localStorage.getItem('user');
+                const currentUser = userStr ? JSON.parse(userStr) : null;
+
+                // 현재 사용자가 승인해야 하는 sign 찾기
+                const mySign = approval.signs?.find(sign =>
+                  sign.approverId === currentUser?.id && sign.status === 'PENDING'
+                );
+
+                if (!mySign) {
+                  return null; // 현재 사용자가 승인할 sign이 없으면 버튼 표시 안함
+                }
+
+                return (
+                  <div className="flex items-center space-x-2 ml-4">
+                    <button
+                      onClick={() => handleApproval(approval.id, mySign.id, 'APPROVED')}
+                      disabled={processing.has(approval.id)}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center space-x-1"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      <span>승인</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const comment = window.prompt('거부 사유를 입력하세요:');
+                        if (comment !== null) {
+                          handleApproval(approval.id, mySign.id, 'REJECTED', comment);
+                        }
+                      }}
+                      disabled={processing.has(approval.id)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center space-x-1"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      <span>거부</span>
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
           </motion.div>
         ))}

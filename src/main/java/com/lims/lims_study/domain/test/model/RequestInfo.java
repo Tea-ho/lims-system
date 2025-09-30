@@ -9,6 +9,7 @@ public class RequestInfo {
     private Long id;
     private String title;
     private String description;
+    private boolean requiresApproval;
 
     // MyBatis용 기본 생성자
     public RequestInfo() {
@@ -18,6 +19,14 @@ public class RequestInfo {
         validateInputs(title, description);
         this.title = title;
         this.description = description;
+        this.requiresApproval = false;
+    }
+
+    public RequestInfo(String title, String description, boolean requiresApproval) {
+        validateInputs(title, description);
+        this.title = title;
+        this.description = description;
+        this.requiresApproval = requiresApproval;
     }
 
     private void validateInputs(String title, String description) {
@@ -57,6 +66,14 @@ public class RequestInfo {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public boolean isRequiresApproval() {
+        return requiresApproval;
+    }
+
+    public void setRequiresApproval(boolean requiresApproval) {
+        this.requiresApproval = requiresApproval;
     }
 
 }

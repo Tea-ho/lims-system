@@ -73,9 +73,10 @@ public class ApprovalController {
 
         ApprovalStatus status = ApprovalStatus.valueOf(request.get("status"));
         String comment = request.get("comment");
+        Long signId = Long.parseLong(request.get("signId"));
 
-        // TODO: Implement processApproval method in service
-        ApprovalResponseDto response = approvalService.getApproval(approvalId);
+        ApprovalSignUpdateDto updateDto = new ApprovalSignUpdateDto(status, comment);
+        ApprovalResponseDto response = approvalService.updateApprovalSign(approvalId, signId, updateDto);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

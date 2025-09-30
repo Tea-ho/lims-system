@@ -3,19 +3,22 @@
 <mapper namespace="com.lims.lims_study.domain.approval.repository.ApprovalRepository">
     <resultMap id="ApprovalResultMap" type="com.lims.lims_study.domain.approval.model.Approval">
         <id property="id" column="id"/>
-        <result property="status" column="status"/>
+        <result property="status" column="status" javaType="com.lims.lims_study.domain.approval.model.ApprovalStatus" jdbcType="VARCHAR"/>
+        <result property="version" column="version"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <insert id="insert" parameterType="Approval" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO approvals (status, created_at, updated_at)
-        VALUES (#{status}, #{createdAt}, #{updatedAt})
+        INSERT INTO approvals (status, version, created_at, updated_at)
+        VALUES (#{status, javaType=com.lims.lims_study.domain.approval.model.ApprovalStatus, jdbcType=VARCHAR},
+                #{version}, #{createdAt}, #{updatedAt})
     </insert>
 
     <update id="update" parameterType="Approval">
         UPDATE approvals
-        SET status = #{status}
+        SET status = #{status, javaType=com.lims.lims_study.domain.approval.model.ApprovalStatus, jdbcType=VARCHAR},
+            updated_at = #{updatedAt}
         WHERE id = #{id}
     </update>
 
@@ -25,18 +28,41 @@
     </delete>
 
     <select id="findById" parameterType="long" resultMap="ApprovalResultMap">
-        SELECT id, status, created_at, updated_at
+        SELECT id, status, version, created_at, updated_at
         FROM approvals
         WHERE id = #{id}
     </select>
 
     <select id="findByTargetId" parameterType="long" resultMap="ApprovalResultMap">
-        SELECT DISTINCT a.id, a.status, a.created_at, a.updated_at
+        SELECT DISTINCT a.id, a.status, a.version, a.created_at, a.updated_at
         FROM approvals a
                  JOIN approval_signs s ON a.id = s.approval_id
         WHERE s.target_id = #{targetId}
         ORDER BY a.id DESC
     </select>
+
+    <select id="findByStatus" parameterType="com.lims.lims_study.domain.approval.model.ApprovalStatus" resultMap="ApprovalResultMap">
+        SELECT id, status, version, created_at, updated_at
+        FROM approvals
+        WHERE status = #{status, javaType=com.lims.lims_study.domain.approval.model.ApprovalStatus, jdbcType=VARCHAR}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findPendingApprovals" resultMap="ApprovalResultMap">
+        SELECT id, status, version, created_at, updated_at
+        FROM approvals
+        WHERE status = 'PENDING'
+        ORDER BY created_at DESC
+    </select>
+
+    <update id="updateWithVersion">
+        UPDATE approvals
+        SET status = #{approval.status, javaType=com.lims.lims_study.domain.approval.model.ApprovalStatus, jdbcType=VARCHAR},
+            version = version + 1,
+            updated_at = #{approval.updatedAt}
+        WHERE id = #{approval.id}
+          AND version = #{expectedVersion}
+    </update>
 
     <!-- 대시보드용 쿼리 -->
     <select id="countPendingApprovals" resultType="long">

@@ -6,8 +6,8 @@
         <result property="approvalId" column="approval_id"/>
         <result property="approverId" column="approver_id"/>
         <result property="targetId" column="target_id"/>
-        <result property="stage" column="stage" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
-        <result property="status" column="status" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="stage" column="stage" javaType="com.lims.lims_study.domain.test.model.TestStage" jdbcType="VARCHAR"/>
+        <result property="status" column="status" javaType="com.lims.lims_study.domain.approval.model.ApprovalStatus" jdbcType="VARCHAR"/>
         <result property="comment" column="comment"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
@@ -15,15 +15,15 @@
 
     <insert id="insert" parameterType="com.lims.lims_study.domain.approval.model.ApprovalSign" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO approval_signs (approval_id, approver_id, target_id, stage, status, comment, created_at, updated_at)
-        VALUES (#{approvalId}, #{approverId}, #{targetId}, 
-                #{stage, typeHandler=org.apache.ibatis.type.EnumTypeHandler}, 
-                #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}, 
+        VALUES (#{approvalId}, #{approverId}, #{targetId},
+                #{stage, javaType=com.lims.lims_study.domain.test.model.TestStage, jdbcType=VARCHAR},
+                #{status, javaType=com.lims.lims_study.domain.approval.model.ApprovalStatus, jdbcType=VARCHAR},
                 #{comment}, #{createdAt}, #{updatedAt})
     </insert>
 
     <update id="update" parameterType="com.lims.lims_study.domain.approval.model.ApprovalSign">
         UPDATE approval_signs
-        SET status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+        SET status = #{status, javaType=com.lims.lims_study.domain.approval.model.ApprovalStatus, jdbcType=VARCHAR},
             comment = #{comment},
             updated_at = #{updatedAt}
         WHERE id = #{id}
@@ -56,9 +56,9 @@
     <select id="findByApprovalIdAndTargetIdAndStage" resultMap="ApprovalSignResultMap">
         SELECT id, approval_id, approver_id, target_id, stage, status, comment, created_at, updated_at
         FROM approval_signs
-        WHERE approval_id = #{approvalId} 
-          AND target_id = #{targetId} 
-          AND stage = #{stage, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+        WHERE approval_id = #{approvalId}
+          AND target_id = #{targetId}
+          AND stage = #{stage, javaType=com.lims.lims_study.domain.test.model.TestStage, jdbcType=VARCHAR}
     </select>
 
     <!-- 승인자별 대기 중인 승인 조회 -->
