@@ -1,5 +1,5 @@
 export type ApprovalStatus = 'PENDING' | 'PARTIAL_APPROVED' | 'APPROVED' | 'REJECTED';
-export type TestStage = 'REQUEST' | 'RECEIPT' | 'RECEIPT_APPROVAL' | 'RESULT_INPUT' | 'COMPLETED';
+export type TestStage = 'REQUEST' | 'RECEIPT' | 'RECEIPT_APPROVAL' | 'RESULT_INPUT' | 'RESULT_APPROVAL' | 'COMPLETED';
 export type UserRole = 'ADMIN' | 'MANAGER' | 'USER' | 'ANALYST' | 'REVIEWER';
 export type NotificationType = 'APPROVAL_REQUEST' | 'TEST_STATUS_CHANGE' | 'SYSTEM_ALERT' | 'REMINDER';
 

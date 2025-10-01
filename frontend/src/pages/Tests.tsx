@@ -15,6 +15,7 @@ const stageBadgeColors = {
   RECEIPT: 'bg-yellow-100 text-yellow-800',
   RECEIPT_APPROVAL: 'bg-purple-100 text-purple-800',
   RESULT_INPUT: 'bg-orange-100 text-orange-800',
+  RESULT_APPROVAL: 'bg-pink-100 text-pink-800',
   COMPLETED: 'bg-green-100 text-green-800'
 };
 
@@ -23,6 +24,7 @@ const stageLabels = {
   RECEIPT: '접수',
   RECEIPT_APPROVAL: '접수결재',
   RESULT_INPUT: '결과입력',
+  RESULT_APPROVAL: '결과승인',
   COMPLETED: '완료'
 };
 

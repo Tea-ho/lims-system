@@ -72,7 +72,39 @@ export class TestService {
     return apiService.moveToReceiptApproval(id, approvalData);
   }
 
-  static async inputResult(id: number, approvalId: number, resultData: { decision: string; comments?: string }): Promise<Test> {
-    return apiService.moveToInputResult(id, approvalId, resultData);
+  static async inputResult(id: number, resultData: { resultData: string; resultValue?: string; resultUnit?: string; requiresApproval: boolean }): Promise<Test> {
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch(`http://localhost:8089/api/tests/${id}/result`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(resultData)
+    });
+
+    if (!response.ok) {
+      throw new Error('결과입력 실패');
+    }
+
+    return response.json();
+  }
+
+  static async resultApproval(id: number, approvalData: any): Promise<Test> {
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch(`http://localhost:8089/api/tests/${id}/result-approval`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(approvalData)
+    });
+
+    if (!response.ok) {
+      throw new Error('결과승인 요청 실패');
+    }
+
+    return response.json();
   }
 }

@@ -154,4 +154,36 @@
         LIMIT #{limit}
     </select>
 
+    <!-- 지난달 시험 수 -->
+    <select id="countTestsLastMonth" resultType="long">
+        SELECT COUNT(*)
+        FROM tests
+        WHERE created_at >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH), '%Y-%m-01')
+          AND created_at &lt; DATE_FORMAT(NOW(), '%Y-%m-01')
+    </select>
+
+    <!-- 이번달 시험 수 -->
+    <select id="countTestsThisMonth" resultType="long">
+        SELECT COUNT(*)
+        FROM tests
+        WHERE created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
+    </select>
+
+    <!-- 어제 완료된 시험 수 -->
+    <select id="countCompletedTestsYesterday" resultType="long">
+        SELECT COUNT(*)
+        FROM tests
+        WHERE stage = 'COMPLETED'
+          AND DATE(updated_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+    </select>
+
+    <!-- 어제 대기 중인 시험 수 -->
+    <select id="countPendingTestsYesterday" resultType="long">
+        SELECT COUNT(*)
+        FROM tests
+        WHERE stage IN ('REQUEST', 'RECEIPT', 'RECEIPT_APPROVAL', 'RESULT_INPUT')
+          AND DATE(created_at) &lt;= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+          AND (updated_at IS NULL OR DATE(updated_at) &lt;= DATE_SUB(CURDATE(), INTERVAL 1 DAY))
+    </select>
+
 </mapper>

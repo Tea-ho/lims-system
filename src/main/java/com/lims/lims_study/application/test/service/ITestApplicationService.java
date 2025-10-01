@@ -17,5 +17,9 @@ public interface ITestApplicationService {
     TestResponseDto moveToReceiptApproval(Long testId, ApprovalCreateDto approvalDto);
     TestResponseDto moveBackToReceipt(Long testId, Long approvalId, ApprovalSignUpdateDto updateDto);
     TestResponseDto moveToInputResult(Long testId, Long approvalId, ApprovalSignUpdateDto updateDto);
+    TestResponseDto inputResult(Long testId, ResultCreateDto dto);
+    TestResponseDto moveToResultApproval(Long testId, ApprovalCreateDto approvalDto);
+    TestResponseDto moveBackToResultInput(Long testId, Long approvalId, ApprovalSignUpdateDto updateDto);
+    TestResponseDto moveToCompleted(Long testId, Long approvalId, ApprovalSignUpdateDto updateDto);
 
 }

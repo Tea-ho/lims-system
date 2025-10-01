@@ -45,6 +45,12 @@ const getStageInfo = (stage: TestStage) => {
         icon: Beaker,
         label: '결과 입력'
       };
+    case 'RESULT_APPROVAL':
+      return {
+        color: 'bg-pink-100 text-pink-800',
+        icon: AlertTriangle,
+        label: '결과 승인'
+      };
     case 'COMPLETED':
       return {
         color: 'bg-green-100 text-green-800',
@@ -79,6 +85,19 @@ const TestDetail: React.FC = () => {
   const [approvalDescription, setApprovalDescription] = useState('');
   const [selectedApprovers, setSelectedApprovers] = useState<number[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+
+  // 결과입력 모달 상태
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [resultData, setResultData] = useState('');
+  const [resultValue, setResultValue] = useState('');
+  const [resultUnit, setResultUnit] = useState('');
+  const [resultRequiresApproval, setResultRequiresApproval] = useState(false);
+
+  // 결과승인 요청 모달 상태
+  const [showResultApprovalModal, setShowResultApprovalModal] = useState(false);
+  const [resultApprovalTitle, setResultApprovalTitle] = useState('');
+  const [resultApprovalDescription, setResultApprovalDescription] = useState('');
+  const [selectedResultApprovers, setSelectedResultApprovers] = useState<number[]>([]);
 
   useEffect(() => {
     const fetchTest = async () => {
@@ -169,7 +188,13 @@ const TestDetail: React.FC = () => {
         requiresApproval
       });
 
-      setTest(updatedTest);
+      console.log('✅ Receipt completed, updated test:', updatedTest);
+
+      // 데이터를 다시 가져와서 최신 상태 반영
+      const refreshedTest = await TestService.getTestById(test.id);
+      console.log('✅ Refreshed test data:', refreshedTest);
+
+      setTest(refreshedTest);
       setShowReceiptModal(false);
       setReceiptDetails('');
       setRequiresApproval(false);
@@ -231,8 +256,13 @@ const TestDetail: React.FC = () => {
       console.log('📋 Sending approval data:', approvalData);
 
       const updatedTest = await TestService.receiptApproval(test.id, approvalData);
+      console.log('✅ Receipt approval requested, updated test:', updatedTest);
 
-      setTest(updatedTest);
+      // 데이터를 다시 가져와서 최신 상태 반영
+      const refreshedTest = await TestService.getTestById(test.id);
+      console.log('✅ Refreshed test data:', refreshedTest);
+
+      setTest(refreshedTest);
       setShowApprovalModal(false);
       setApprovalTitle('');
       setApprovalDescription('');
@@ -241,6 +271,114 @@ const TestDetail: React.FC = () => {
     } catch (error) {
       console.error('접수승인 요청 실패:', error);
       toast.error('접수승인 요청에 실패했습니다.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // 결과입력 처리 함수
+  const handleResultInput = async () => {
+    if (!resultData.trim()) {
+      toast.error('결과 데이터를 입력해주세요.');
+      return;
+    }
+
+    if (!test?.id) {
+      toast.error('시험 ID가 없습니다.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const updatedTest = await TestService.inputResult(test.id, {
+        resultData: resultData.trim(),
+        resultValue: resultValue.trim(),
+        resultUnit: resultUnit.trim(),
+        requiresApproval: resultRequiresApproval
+      });
+
+      console.log('✅ Result input completed, updated test:', updatedTest);
+
+      // 데이터를 다시 가져와서 최신 상태 반영
+      const refreshedTest = await TestService.getTestById(test.id);
+      console.log('✅ Refreshed test data:', refreshedTest);
+
+      setTest(refreshedTest);
+      setShowResultModal(false);
+      setResultData('');
+      setResultValue('');
+      setResultUnit('');
+      setResultRequiresApproval(false);
+      toast.success('결과가 입력되었습니다.');
+    } catch (error) {
+      console.error('결과입력 실패:', error);
+      toast.error('결과입력에 실패했습니다.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // 결과승인 요청 처리 함수
+  const handleResultApproval = async () => {
+    if (!resultApprovalTitle.trim()) {
+      toast.error('승인 제목을 입력해주세요.');
+      return;
+    }
+
+    if (!resultApprovalDescription.trim()) {
+      toast.error('승인 설명을 입력해주세요.');
+      return;
+    }
+
+    if (selectedResultApprovers.length === 0) {
+      toast.error('최소 1명의 승인자를 선택해주세요.');
+      return;
+    }
+
+    if (!test?.id) {
+      toast.error('시험 ID가 없습니다.');
+      return;
+    }
+
+    const userStr = localStorage.getItem('user');
+    const currentUser = userStr ? JSON.parse(userStr) : null;
+
+    if (!currentUser?.id) {
+      toast.error('사용자 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const approvalData = {
+        requesterId: currentUser.id,
+        comment: `${resultApprovalTitle.trim()}\n\n${resultApprovalDescription.trim()}`,
+        signs: selectedResultApprovers.map(approverId => ({
+          approverId: approverId,
+          targetId: test.id,
+          stage: 'RESULT_APPROVAL' as const
+        }))
+      };
+
+      console.log('📋 Sending result approval data:', approvalData);
+
+      const updatedTest = await TestService.resultApproval(test.id, approvalData);
+      console.log('✅ Result approval requested, updated test:', updatedTest);
+
+      // 데이터를 다시 가져와서 최신 상태 반영
+      const refreshedTest = await TestService.getTestById(test.id);
+      console.log('✅ Refreshed test data:', refreshedTest);
+
+      setTest(refreshedTest);
+      setShowResultApprovalModal(false);
+      setResultApprovalTitle('');
+      setResultApprovalDescription('');
+      setSelectedResultApprovers([]);
+      toast.success('결과승인 요청이 완료되었습니다.');
+    } catch (error) {
+      console.error('결과승인 요청 실패:', error);
+      toast.error('결과승인 요청에 실패했습니다.');
     } finally {
       setSubmitting(false);
     }
@@ -344,6 +482,24 @@ const TestDetail: React.FC = () => {
                 접수승인 요청
               </button>
             )}
+            {test.stage === 'RESULT_INPUT' && (
+              <button
+                onClick={() => setShowResultModal(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              >
+                <Beaker className="-ml-1 mr-2 h-4 w-4" />
+                결과입력
+              </button>
+            )}
+            {test.stage === 'RESULT_APPROVAL' && test.resultInfo?.requiresApproval && (
+              <button
+                onClick={() => setShowResultApprovalModal(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+              >
+                <CheckCircle className="-ml-1 mr-2 h-4 w-4" />
+                결과승인 요청
+              </button>
+            )}
             <button
               onClick={() => {/* 수정 기능 추가 */}}
               className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -407,9 +563,9 @@ const TestDetail: React.FC = () => {
             </div>
             <div className="px-6 py-4">
               <div className="space-y-4">
-                {(['REQUEST', 'RECEIPT', 'RECEIPT_APPROVAL', 'RESULT_INPUT', 'COMPLETED'] as TestStage[]).map((stage, index) => {
+                {(['REQUEST', 'RECEIPT', 'RECEIPT_APPROVAL', 'RESULT_INPUT', 'RESULT_APPROVAL', 'COMPLETED'] as TestStage[]).map((stage, index) => {
                   const isActive = test.stage === stage;
-                  const isPassed = (['REQUEST', 'RECEIPT', 'RECEIPT_APPROVAL', 'RESULT_INPUT', 'COMPLETED'] as TestStage[]).indexOf(test.stage) > index;
+                  const isPassed = (['REQUEST', 'RECEIPT', 'RECEIPT_APPROVAL', 'RESULT_INPUT', 'RESULT_APPROVAL', 'COMPLETED'] as TestStage[]).indexOf(test.stage) > index;
                   const stageConfig = getStageInfo(stage);
                   const StageIconComponent = stageConfig.icon;
 
@@ -509,7 +665,7 @@ const TestDetail: React.FC = () => {
         )}
 
         {/* 결과 정보 */}
-        {test.resultInfo && (
+        {test.resultInfo && (test.stage === 'RESULT_INPUT' || test.stage === 'RESULT_APPROVAL' || test.stage === 'COMPLETED') && (
           <div className="bg-white shadow rounded-lg">
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -523,6 +679,20 @@ const TestDetail: React.FC = () => {
                   <dt className="text-sm font-medium text-gray-500">결과 데이터</dt>
                   <dd className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{test.resultInfo.resultData}</dd>
                 </div>
+                {test.resultInfo.resultValue && (
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">측정 값</dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      {test.resultInfo.resultValue} {test.resultInfo.resultUnit || ''}
+                    </dd>
+                  </div>
+                )}
+                {test.resultInfo.resultUnit && !test.resultInfo.resultValue && (
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">단위</dt>
+                    <dd className="mt-1 text-sm text-gray-900">{test.resultInfo.resultUnit}</dd>
+                  </div>
+                )}
                 <div>
                   <dt className="text-sm font-medium text-gray-500">승인 필요 여부</dt>
                   <dd className="mt-1">
@@ -835,6 +1005,291 @@ const TestDetail: React.FC = () => {
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span>요청 처리 중...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>승인 요청</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* 결과입력 모달 */}
+      {showResultModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            {/* 모달 헤더 */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Beaker className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">결과 입력</h3>
+                  <p className="text-sm text-gray-500">시험 #{test?.id} - {test?.requestInfo?.title}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowResultModal(false);
+                  setResultData('');
+                  setResultValue('');
+                  setResultUnit('');
+                  setResultRequiresApproval(false);
+                }}
+                className="text-gray-400 hover:text-gray-500 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* 모달 바디 */}
+            <div className="px-6 py-4 space-y-4">
+              {/* 결과 데이터 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  결과 데이터 <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={resultData}
+                  onChange={(e) => setResultData(e.target.value)}
+                  placeholder="시험 결과 데이터를 입력하세요"
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  disabled={submitting}
+                />
+              </div>
+
+              {/* 결과 값 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  결과 값
+                </label>
+                <input
+                  type="text"
+                  value={resultValue}
+                  onChange={(e) => setResultValue(e.target.value)}
+                  placeholder="측정 값을 입력하세요"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  disabled={submitting}
+                />
+              </div>
+
+              {/* 결과 단위 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  결과 단위
+                </label>
+                <input
+                  type="text"
+                  value={resultUnit}
+                  onChange={(e) => setResultUnit(e.target.value)}
+                  placeholder="단위를 입력하세요 (예: mg/L, ppm)"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  disabled={submitting}
+                />
+              </div>
+
+              {/* 승인 필요 여부 */}
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="resultRequiresApproval"
+                  checked={resultRequiresApproval}
+                  onChange={(e) => setResultRequiresApproval(e.target.checked)}
+                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  disabled={submitting}
+                />
+                <label htmlFor="resultRequiresApproval" className="text-sm text-gray-700">
+                  결과 승인 필요
+                </label>
+              </div>
+            </div>
+
+            {/* 모달 푸터 */}
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowResultModal(false);
+                  setResultData('');
+                  setResultValue('');
+                  setResultUnit('');
+                  setResultRequiresApproval(false);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                disabled={submitting}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleResultInput}
+                disabled={submitting || !resultData.trim()}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              >
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>입력 중...</span>
+                  </>
+                ) : (
+                  <>
+                    <Beaker className="w-4 h-4" />
+                    <span>결과 입력</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* 결과승인 요청 모달 */}
+      {showResultApprovalModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            {/* 모달 헤더 */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-pink-100 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-pink-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">결과승인 요청</h3>
+                  <p className="text-sm text-gray-500">시험 #{test.id} - {test.requestInfo?.title}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowResultApprovalModal(false);
+                  setResultApprovalTitle('');
+                  setResultApprovalDescription('');
+                  setSelectedResultApprovers([]);
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                disabled={submitting}
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* 모달 본문 */}
+            <div className="px-6 py-4 space-y-4">
+              {/* 결과 정보 요약 */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">결과 정보</h4>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div><strong>결과 데이터:</strong> {test.resultInfo?.resultData}</div>
+                  {test.resultInfo?.resultValue && (
+                    <div><strong>측정 값:</strong> {test.resultInfo.resultValue} {test.resultInfo.resultUnit || ''}</div>
+                  )}
+                </div>
+              </div>
+
+              {/* 승인 제목 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  승인 제목 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={resultApprovalTitle}
+                  onChange={(e) => setResultApprovalTitle(e.target.value)}
+                  placeholder="승인 제목을 입력하세요"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  disabled={submitting}
+                />
+              </div>
+
+              {/* 승인 설명 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  승인 설명 <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={resultApprovalDescription}
+                  onChange={(e) => setResultApprovalDescription(e.target.value)}
+                  placeholder="승인 요청 사유 및 상세 내용을 입력하세요..."
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none"
+                  disabled={submitting}
+                />
+              </div>
+
+              {/* 승인자 선택 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  승인자 선택 <span className="text-red-500">*</span>
+                </label>
+                <div className="border border-gray-300 rounded-lg max-h-48 overflow-y-auto">
+                  {Array.isArray(users) && users.length > 0 ? (
+                    users.map((user) => (
+                      <label
+                        key={user.id}
+                        className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedResultApprovers.includes(user.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedResultApprovers([...selectedResultApprovers, user.id]);
+                            } else {
+                              setSelectedResultApprovers(selectedResultApprovers.filter(id => id !== user.id));
+                            }
+                          }}
+                          className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                          disabled={submitting}
+                        />
+                        <span className="ml-3 text-sm text-gray-900">{user.username}</span>
+                      </label>
+                    ))
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                      사용자 목록을 불러오는 중...
+                    </div>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  선택된 승인자: {selectedResultApprovers.length}명
+                </p>
+              </div>
+            </div>
+
+            {/* 모달 푸터 */}
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowResultApprovalModal(false);
+                  setResultApprovalTitle('');
+                  setResultApprovalDescription('');
+                  setSelectedResultApprovers([]);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                disabled={submitting}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleResultApproval}
+                disabled={submitting || !resultApprovalTitle.trim() || !resultApprovalDescription.trim() || selectedResultApprovers.length === 0}
+                className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              >
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>요청 중...</span>
                   </>
                 ) : (
                   <>

@@ -88,4 +88,32 @@ public class TestController {
         TestResponseDto response = testApplicationService.moveToInputResult(testId, approvalId, updateDto);
         return ResponseEntity.ok(response);
     }
+
+    // 결과입력
+    @PostMapping("/{testId}/result")
+    public ResponseEntity<TestResponseDto> inputResult(@PathVariable Long testId, @RequestBody ResultCreateDto dto) {
+        TestResponseDto response = testApplicationService.inputResult(testId, dto);
+        return ResponseEntity.ok(response);
+    }
+
+    // 결과입력 -> 결과 승인
+    @PostMapping("/{testId}/result-approval")
+    public ResponseEntity<TestResponseDto> moveToResultApproval(@PathVariable Long testId, @RequestBody ApprovalCreateDto approvalDto) {
+        TestResponseDto response = testApplicationService.moveToResultApproval(testId, approvalDto);
+        return ResponseEntity.ok(response);
+    }
+
+    // 결과 승인 -> 결과입력 (반려)
+    @PostMapping("/{testId}/back-to-result-input")
+    public ResponseEntity<TestResponseDto> moveBackToResultInput(@PathVariable Long testId, @RequestParam Long approvalId, @RequestBody ApprovalSignUpdateDto updateDto) {
+        TestResponseDto response = testApplicationService.moveBackToResultInput(testId, approvalId, updateDto);
+        return ResponseEntity.ok(response);
+    }
+
+    // 결과 승인 -> 완료 (승인)
+    @PostMapping("/{testId}/complete")
+    public ResponseEntity<TestResponseDto> moveToCompleted(@PathVariable Long testId, @RequestParam Long approvalId, @RequestBody ApprovalSignUpdateDto updateDto) {
+        TestResponseDto response = testApplicationService.moveToCompleted(testId, approvalId, updateDto);
+        return ResponseEntity.ok(response);
+    }
 }

@@ -7,10 +7,12 @@ import com.lims.lims_study.domain.product.model.Product;
 import com.lims.lims_study.domain.product.service.IProductService;
 import com.lims.lims_study.domain.test.model.ReceiptInfo;
 import com.lims.lims_study.domain.test.model.RequestInfo;
+import com.lims.lims_study.domain.test.model.ResultInfo;
 import com.lims.lims_study.domain.test.model.Test;
 import com.lims.lims_study.domain.test.service.ITestCrudService;
 import com.lims.lims_study.domain.test.service.ITestReceiptCrudService;
 import com.lims.lims_study.domain.test.service.ITestRequestCrudService;
+import com.lims.lims_study.domain.test.service.ITestResultCrudService;
 import com.lims.lims_study.domain.test.service.ITestStateService;
 import com.lims.lims_study.domain.user.model.User;
 import com.lims.lims_study.domain.user.service.IUserService;
@@ -29,9 +31,10 @@ public class TestApplicationService implements ITestApplicationService {
     private final ITestStateService testStateService;
     private final ITestRequestCrudService testRequestCrudService;
     private final ITestReceiptCrudService testReceiptCrudService;
+    private final ITestResultCrudService testResultCrudService;
     private final IUserService userService;
     private final IProductService productService;
-    
+
     private final AuthenticationProvider authProvider;
     private final TestDtoMapper dtoMapper;
 
@@ -79,7 +82,8 @@ public class TestApplicationService implements ITestApplicationService {
                 .orElseThrow(() -> new IllegalArgumentException("ProductRepository not found: " + test.getProductId()));
         RequestInfo requestInfo = test.getRequestInfoId() != null ? testRequestCrudService.findById(test.getRequestInfoId()).orElse(null) : null;
         ReceiptInfo receiptInfo = test.getReceiptInfoId() != null ? testReceiptCrudService.findById(test.getReceiptInfoId()).orElse(null) : null;
-        return dtoMapper.toResponseDto(test, user, product, requestInfo, receiptInfo, null, null);
+        ResultInfo resultInfo = test.getResultInfoId() != null ? testResultCrudService.findById(test.getResultInfoId()).orElse(null) : null;
+        return dtoMapper.toResponseDto(test, user, product, requestInfo, receiptInfo, resultInfo, null);
     }
 
     @Override
@@ -92,7 +96,8 @@ public class TestApplicationService implements ITestApplicationService {
                     .orElseThrow(() -> new IllegalArgumentException("ProductRepository not found: " + test.getProductId()));
             RequestInfo requestInfo = test.getRequestInfoId() != null ? testRequestCrudService.findById(test.getRequestInfoId()).orElse(null) : null;
             ReceiptInfo receiptInfo = test.getReceiptInfoId() != null ? testReceiptCrudService.findById(test.getReceiptInfoId()).orElse(null) : null;
-            return dtoMapper.toResponseDto(test, user, product, requestInfo, receiptInfo, null, null);
+            ResultInfo resultInfo = test.getResultInfoId() != null ? testResultCrudService.findById(test.getResultInfoId()).orElse(null) : null;
+            return dtoMapper.toResponseDto(test, user, product, requestInfo, receiptInfo, resultInfo, null);
         }).collect(Collectors.toList());
     }
 
@@ -182,5 +187,78 @@ public class TestApplicationService implements ITestApplicationService {
         ReceiptInfo receiptInfo = testReceiptCrudService.findById(test.getReceiptInfoId())
                 .orElseThrow(() -> new IllegalStateException("Receipt info not found"));
         return dtoMapper.toResponseDto(test, user, product, requestInfo, receiptInfo, null, null);
+    }
+
+    @Override
+    public TestResponseDto inputResult(Long testId, ResultCreateDto dto) {
+        ResultInfo resultInfo = new ResultInfo(dto.getResultData(), dto.getResultValue(), dto.getResultUnit(), dto.isRequiresApproval());
+        testStateService.inputResult(testId, resultInfo);
+
+        Test test = testCrudService.findById(testId)
+                .orElseThrow(() -> new IllegalArgumentException("Test not found: " + testId));
+        User user = userService.findById(test.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + test.getUserId()));
+        Product product = productService.findById(test.getProductId())
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + test.getProductId()));
+        RequestInfo requestInfo = testRequestCrudService.findById(test.getRequestInfoId())
+                .orElseThrow(() -> new IllegalStateException("Request info not found"));
+        ReceiptInfo receiptInfo = testReceiptCrudService.findById(test.getReceiptInfoId())
+                .orElseThrow(() -> new IllegalStateException("Receipt info not found"));
+        ResultInfo resultInfoFromDb = test.getResultInfoId() != null ? testResultCrudService.findById(test.getResultInfoId()).orElse(null) : null;
+        return dtoMapper.toResponseDto(test, user, product, requestInfo, receiptInfo, resultInfoFromDb, null);
+    }
+
+    @Override
+    public TestResponseDto moveToResultApproval(Long testId, ApprovalCreateDto approvalDto) {
+        testStateService.moveToResultApproval(testId, approvalDto);
+        Test test = testCrudService.findById(testId)
+                .orElseThrow(() -> new IllegalArgumentException("Test not found: " + testId));
+        User user = userService.findById(test.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + test.getUserId()));
+        Product product = productService.findById(test.getProductId())
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + test.getProductId()));
+        RequestInfo requestInfo = testRequestCrudService.findById(test.getRequestInfoId())
+                .orElseThrow(() -> new IllegalStateException("Request info not found"));
+        ReceiptInfo receiptInfo = testReceiptCrudService.findById(test.getReceiptInfoId())
+                .orElseThrow(() -> new IllegalStateException("Receipt info not found"));
+        ResultInfo resultInfo = testResultCrudService.findById(test.getResultInfoId())
+                .orElseThrow(() -> new IllegalStateException("Result info not found"));
+        return dtoMapper.toResponseDto(test, user, product, requestInfo, receiptInfo, resultInfo, null);
+    }
+
+    @Override
+    public TestResponseDto moveBackToResultInput(Long testId, Long approvalId, ApprovalSignUpdateDto updateDto) {
+        testStateService.moveBackToResultInput(testId, approvalId, updateDto);
+        Test test = testCrudService.findById(testId)
+                .orElseThrow(() -> new IllegalArgumentException("Test not found: " + testId));
+        User user = userService.findById(test.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + test.getUserId()));
+        Product product = productService.findById(test.getProductId())
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + test.getProductId()));
+        RequestInfo requestInfo = testRequestCrudService.findById(test.getRequestInfoId())
+                .orElseThrow(() -> new IllegalStateException("Request info not found"));
+        ReceiptInfo receiptInfo = testReceiptCrudService.findById(test.getReceiptInfoId())
+                .orElseThrow(() -> new IllegalStateException("Receipt info not found"));
+        ResultInfo resultInfo = testResultCrudService.findById(test.getResultInfoId())
+                .orElseThrow(() -> new IllegalStateException("Result info not found"));
+        return dtoMapper.toResponseDto(test, user, product, requestInfo, receiptInfo, resultInfo, null);
+    }
+
+    @Override
+    public TestResponseDto moveToCompleted(Long testId, Long approvalId, ApprovalSignUpdateDto updateDto) {
+        testStateService.moveToCompleted(testId, approvalId, updateDto);
+        Test test = testCrudService.findById(testId)
+                .orElseThrow(() -> new IllegalArgumentException("Test not found: " + testId));
+        User user = userService.findById(test.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + test.getUserId()));
+        Product product = productService.findById(test.getProductId())
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + test.getProductId()));
+        RequestInfo requestInfo = testRequestCrudService.findById(test.getRequestInfoId())
+                .orElseThrow(() -> new IllegalStateException("Request info not found"));
+        ReceiptInfo receiptInfo = testReceiptCrudService.findById(test.getReceiptInfoId())
+                .orElseThrow(() -> new IllegalStateException("Receipt info not found"));
+        ResultInfo resultInfo = testResultCrudService.findById(test.getResultInfoId())
+                .orElseThrow(() -> new IllegalStateException("Result info not found"));
+        return dtoMapper.toResponseDto(test, user, product, requestInfo, receiptInfo, resultInfo, null);
     }
 }

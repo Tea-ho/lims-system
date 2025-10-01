@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 @DisplayName("전원 승인제 및 동시성 제어 테스트")
 class ApprovalDomainServiceTest {
 
@@ -42,7 +43,13 @@ class ApprovalDomainServiceTest {
     
     @Mock
     private ApprovalValidator approvalValidator;
-    
+
+    @Mock
+    private com.lims.lims_study.domain.user.service.IUserService userService;
+
+    @Mock
+    private com.lims.lims_study.domain.test.service.ITestCrudService testCrudService;
+
     @InjectMocks
     private ApprovalDomainService approvalDomainService;
     
@@ -55,15 +62,20 @@ class ApprovalDomainServiceTest {
         approval = new Approval(ApprovalStatus.PENDING);
         approval.setId(1L);
         approval.setVersion(0L);
-        
+
         approvalRequest = new ApprovalRequest(1L, 100L, "테스트 승인 요청");
-        
+
         // 3명의 승인자 설정
         approvalSigns = Arrays.asList(
             new ApprovalSign(1L, 200L, 1000L, TestStage.REQUEST, ApprovalStatus.PENDING, null),
             new ApprovalSign(1L, 201L, 1000L, TestStage.REQUEST, ApprovalStatus.PENDING, null),
             new ApprovalSign(1L, 202L, 1000L, TestStage.REQUEST, ApprovalStatus.PENDING, null)
         );
+
+        // userService mock 설정 (requester 정보 조회)
+        com.lims.lims_study.domain.user.model.User mockUser = mock(com.lims.lims_study.domain.user.model.User.class);
+        when(mockUser.getUsername()).thenReturn("테스트사용자");
+        when(userService.findById(100L)).thenReturn(Optional.of(mockUser));
     }
     
     @Test
@@ -73,21 +85,22 @@ class ApprovalDomainServiceTest {
         approvalSigns.get(0).update(ApprovalStatus.APPROVED, "승인");
         approvalSigns.get(1).update(ApprovalStatus.APPROVED, "승인");
         // approvalSigns.get(2)는 여전히 PENDING
-        
+
         when(approvalValidator.findAndVerifyApproval(1L)).thenReturn(approval);
         when(approvalValidator.findAndVerifyApprovalSign(1L, 1L)).thenReturn(approvalSigns.get(0));
         when(approvalSignRepository.findByApprovalId(1L)).thenReturn(approvalSigns);
         when(approvalRepository.updateWithVersion(any(Approval.class), eq(0L))).thenReturn(1);
         when(approvalRequestRepository.findByApprovalId(1L)).thenReturn(Optional.of(approvalRequest));
-        
+
         ApprovalSignUpdateDto dto = new ApprovalSignUpdateDto();
         dto.setStatus(ApprovalStatus.APPROVED);
         dto.setComment("승인");
-        
+
         // When
         ApprovalResponseDto result = approvalDomainService.updateApprovalSign(1L, 1L, dto);
-        
+
         // Then: 부분 승인 상태가 되어야 함
+        assertThat(result).isNotNull();
         assertThat(approval.getStatus()).isEqualTo(ApprovalStatus.PARTIAL_APPROVED);
     }
     
@@ -96,21 +109,22 @@ class ApprovalDomainServiceTest {
     void shouldApproveWhenAllApproversApprove() {
         // Given: 모든 승인자가 승인
         approvalSigns.forEach(sign -> sign.update(ApprovalStatus.APPROVED, "승인"));
-        
+
         when(approvalValidator.findAndVerifyApproval(1L)).thenReturn(approval);
         when(approvalValidator.findAndVerifyApprovalSign(1L, 1L)).thenReturn(approvalSigns.get(0));
         when(approvalSignRepository.findByApprovalId(1L)).thenReturn(approvalSigns);
         when(approvalRepository.updateWithVersion(any(Approval.class), eq(0L))).thenReturn(1);
         when(approvalRequestRepository.findByApprovalId(1L)).thenReturn(Optional.of(approvalRequest));
-        
+
         ApprovalSignUpdateDto dto = new ApprovalSignUpdateDto();
         dto.setStatus(ApprovalStatus.APPROVED);
         dto.setComment("승인");
-        
+
         // When
         ApprovalResponseDto result = approvalDomainService.updateApprovalSign(1L, 1L, dto);
-        
+
         // Then: 전체 승인 상태가 되어야 함
+        assertThat(result).isNotNull();
         assertThat(approval.getStatus()).isEqualTo(ApprovalStatus.APPROVED);
     }
     
@@ -121,21 +135,22 @@ class ApprovalDomainServiceTest {
         approvalSigns.get(0).update(ApprovalStatus.APPROVED, "승인");
         approvalSigns.get(1).update(ApprovalStatus.REJECTED, "반려");
         // approvalSigns.get(2)는 여전히 PENDING
-        
+
         when(approvalValidator.findAndVerifyApproval(1L)).thenReturn(approval);
         when(approvalValidator.findAndVerifyApprovalSign(1L, 2L)).thenReturn(approvalSigns.get(1));
         when(approvalSignRepository.findByApprovalId(1L)).thenReturn(approvalSigns);
         when(approvalRepository.updateWithVersion(any(Approval.class), eq(0L))).thenReturn(1);
         when(approvalRequestRepository.findByApprovalId(1L)).thenReturn(Optional.of(approvalRequest));
-        
+
         ApprovalSignUpdateDto dto = new ApprovalSignUpdateDto();
         dto.setStatus(ApprovalStatus.REJECTED);
         dto.setComment("반려");
-        
+
         // When
         ApprovalResponseDto result = approvalDomainService.updateApprovalSign(1L, 2L, dto);
-        
+
         // Then: 전체 반려 상태가 되어야 함
+        assertThat(result).isNotNull();
         assertThat(approval.getStatus()).isEqualTo(ApprovalStatus.REJECTED);
     }
     
@@ -150,14 +165,14 @@ class ApprovalDomainServiceTest {
             .thenReturn(0)  // 첫 번째: 버전 충돌
             .thenReturn(1); // 두 번째: 성공
         when(approvalRequestRepository.findByApprovalId(1L)).thenReturn(Optional.of(approvalRequest));
-        
+
         ApprovalSignUpdateDto dto = new ApprovalSignUpdateDto();
         dto.setStatus(ApprovalStatus.APPROVED);
         dto.setComment("승인");
-        
+
         // When
         ApprovalResponseDto result = approvalDomainService.updateApprovalSign(1L, 1L, dto);
-        
+
         // Then: 재시도 후 성공
         assertThat(result).isNotNull();
         verify(approvalRepository, times(2)).updateWithVersion(any(Approval.class), anyLong());
@@ -197,15 +212,16 @@ class ApprovalDomainServiceTest {
         when(approvalSignRepository.findByApprovalId(1L)).thenReturn(Arrays.asList());
         when(approvalRepository.updateWithVersion(any(Approval.class), eq(0L))).thenReturn(1);
         when(approvalRequestRepository.findByApprovalId(1L)).thenReturn(Optional.of(approvalRequest));
-        
+
         ApprovalSignUpdateDto dto = new ApprovalSignUpdateDto();
         dto.setStatus(ApprovalStatus.APPROVED);
         dto.setComment("승인");
-        
+
         // When
-        approvalDomainService.updateApprovalSign(1L, 1L, dto);
-        
+        ApprovalResponseDto result = approvalDomainService.updateApprovalSign(1L, 1L, dto);
+
         // Then: PENDING 상태 유지
+        assertThat(result).isNotNull();
         assertThat(approval.getStatus()).isEqualTo(ApprovalStatus.PENDING);
     }
     

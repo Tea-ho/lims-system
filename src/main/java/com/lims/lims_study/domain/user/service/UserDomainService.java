@@ -2,6 +2,7 @@ package com.lims.lims_study.domain.user.service;
 
 import com.lims.lims_study.domain.user.model.User;
 import com.lims.lims_study.domain.user.repository.UserRepository;
+import com.lims.lims_study.global.audit.Auditable;
 import com.lims.lims_study.global.exception.BusinessException;
 import com.lims.lims_study.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -22,36 +23,59 @@ public class UserDomainService implements IUserService {
 
     @Override
     @Transactional
+    @Auditable(
+        entityType = "USER",
+        action = "CREATE",
+        entityIdExpression = "#user.id",
+        userIdExpression = "#user.id",
+        recordNewValue = true,
+        newValueExpression = "#user"
+    )
     public User createUser(User user) {
         log.debug("Creating user in domain: {}", user.getUsername());
-        
+
         userValidator.validateForCreation(user);
         userRepository.insert(user);
-        
+
         log.debug("User created in domain with ID: {}", user.getId());
         return user;
     }
 
     @Override
     @Transactional
+    @Auditable(
+        entityType = "USER",
+        action = "UPDATE",
+        entityIdExpression = "#user.id",
+        userIdExpression = "#user.id",
+        recordNewValue = true,
+        newValueExpression = "#user"
+    )
     public User updateUser(User user) {
         log.debug("Updating user in domain: {}", user.getId());
-        
+
         userValidator.validateForUpdate(user);
         userRepository.update(user);
-        
+
         log.debug("User updated in domain: {}", user.getId());
         return user;
     }
 
     @Override
     @Transactional
+    @Auditable(
+        entityType = "USER",
+        action = "DELETE",
+        entityIdExpression = "#userId",
+        recordOldValue = true,
+        oldValueExpression = "#user"
+    )
     public void deleteUser(Long userId) {
         log.debug("Deleting user in domain: {}", userId);
-        
-        userValidator.validateUserExists(userId);
+
+        User user = userValidator.validateUserExists(userId);
         userRepository.delete(userId);
-        
+
         log.debug("User deleted in domain: {}", userId);
     }
 

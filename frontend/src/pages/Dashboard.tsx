@@ -15,6 +15,7 @@ const stageBadgeColors = {
   RECEIPT: 'bg-yellow-100 text-yellow-800',
   RECEIPT_APPROVAL: 'bg-purple-100 text-purple-800',
   RESULT_INPUT: 'bg-orange-100 text-orange-800',
+  RESULT_APPROVAL: 'bg-pink-100 text-pink-800',
   COMPLETED: 'bg-green-100 text-green-800'
 };
 
@@ -23,6 +24,7 @@ const stageLabels = {
   RECEIPT: '접수',
   RECEIPT_APPROVAL: '접수결재',
   RESULT_INPUT: '결과입력',
+  RESULT_APPROVAL: '결과승인',
   COMPLETED: '완료'
 };
 
@@ -47,6 +49,7 @@ const Dashboard: React.FC = () => {
     RECEIPT: 0,
     RECEIPT_APPROVAL: 0,
     RESULT_INPUT: 0,
+    RESULT_APPROVAL: 0,
     COMPLETED: 0
   };
 
@@ -65,6 +68,7 @@ const Dashboard: React.FC = () => {
       case 'RECEIPT': return <Package className="w-4 h-4" />;
       case 'RECEIPT_APPROVAL': return <CheckCircle className="w-4 h-4" />;
       case 'RESULT_INPUT': return <Beaker className="w-4 h-4" />;
+      case 'RESULT_APPROVAL': return <AlertTriangle className="w-4 h-4" />;
       case 'COMPLETED': return <CheckCircle className="w-4 h-4" />;
     }
   };
@@ -126,7 +130,11 @@ const Dashboard: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600 mb-1">전체 시험</p>
               <p className="text-3xl font-bold text-gray-900">{stats.totalTests}</p>
-              <p className="text-sm text-green-600 mt-1">+12% 이번 달</p>
+              <p className={`text-sm mt-1 ${
+                stats.monthlyTestGrowthRate >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {stats.monthlyTestGrowthRate >= 0 ? '+' : ''}{stats.monthlyTestGrowthRate?.toFixed(1)}% 이번 달
+              </p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
               <FileText className="w-6 h-6 text-blue-600" />
@@ -144,7 +152,11 @@ const Dashboard: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600 mb-1">처리 대기</p>
               <p className="text-3xl font-bold text-gray-900">{stats.pendingTests}</p>
-              <p className="text-sm text-orange-600 mt-1">확인 필요</p>
+              <p className={`text-sm mt-1 ${
+                stats.pendingTestsChange > 0 ? 'text-orange-600' : stats.pendingTestsChange < 0 ? 'text-green-600' : 'text-gray-600'
+              }`}>
+                {stats.pendingTestsChange > 0 ? '+' : ''}{stats.pendingTestsChange || 0} 어제 대비
+              </p>
             </div>
             <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
               <Clock className="w-6 h-6 text-orange-600" />
@@ -162,7 +174,9 @@ const Dashboard: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600 mb-1">완료된 시험</p>
               <p className="text-3xl font-bold text-gray-900">{stats.completedTests}</p>
-              <p className="text-sm text-green-600 mt-1">+8 어제</p>
+              <p className="text-sm text-green-600 mt-1">
+                {stats.completedTestsYesterday > 0 ? `+${stats.completedTestsYesterday}` : stats.completedTestsYesterday || 0} 어제
+              </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
               <CheckCircle className="w-6 h-6 text-green-600" />
@@ -180,7 +194,9 @@ const Dashboard: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600 mb-1">등록 제품</p>
               <p className="text-3xl font-bold text-gray-900">{stats.totalProducts}</p>
-              <p className="text-sm text-blue-600 mt-1">활성 상태</p>
+              <p className="text-sm text-blue-600 mt-1">
+                {stats.activeProducts || stats.totalProducts} 활성 상태
+              </p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
               <Package className="w-6 h-6 text-purple-600" />

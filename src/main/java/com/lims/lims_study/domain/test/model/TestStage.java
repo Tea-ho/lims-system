@@ -37,12 +37,23 @@ public enum TestStage {
     RESULT_INPUT {
         @Override
         public TestStage next() {
-            return COMPLETED;
+            return RESULT_APPROVAL;
         }
 
         @Override
         public TestStage previous() {
             return RECEIPT;
+        }
+    },
+    RESULT_APPROVAL {
+        @Override
+        public TestStage next() {
+            return COMPLETED;
+        }
+
+        @Override
+        public TestStage previous() {
+            return RESULT_INPUT;
         }
     },
     COMPLETED {
@@ -53,7 +64,7 @@ public enum TestStage {
 
         @Override
         public TestStage previous() {
-            return RESULT_INPUT;
+            return RESULT_APPROVAL;
         }
     };
 

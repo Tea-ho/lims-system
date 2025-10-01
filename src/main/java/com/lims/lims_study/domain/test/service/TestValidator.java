@@ -2,6 +2,7 @@ package com.lims.lims_study.domain.test.service;
 
 import com.lims.lims_study.domain.product.repository.ProductRepository;
 import com.lims.lims_study.domain.test.model.ReceiptInfo;
+import com.lims.lims_study.domain.test.model.ResultInfo;
 import com.lims.lims_study.domain.test.model.Test;
 import com.lims.lims_study.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,11 @@ public class TestValidator {
     public ReceiptInfo validateReciptInfoExists(Long reciptInfoId, ITestReceiptCrudService testReceiptCrudService){
         return testReceiptCrudService.findById(reciptInfoId)
                 .orElseThrow(() -> new IllegalStateException("Receipt info not found"));
+    }
+
+    public ResultInfo validateResultInfoExists(Long resultInfoId, ITestResultCrudService testResultCrudService){
+        return testResultCrudService.findById(resultInfoId)
+                .orElseThrow(() -> new IllegalStateException("Result info not found"));
     }
 
 }

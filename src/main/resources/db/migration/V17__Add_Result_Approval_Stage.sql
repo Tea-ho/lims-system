@@ -1,0 +1,9 @@
+-- Add RESULT_APPROVAL stage to TestStage enum columns
+
+-- Update tests table stage column
+ALTER TABLE tests
+MODIFY COLUMN stage ENUM('REQUEST', 'RECEIPT', 'RECEIPT_APPROVAL', 'RESULT_INPUT', 'RESULT_APPROVAL', 'COMPLETED') NOT NULL DEFAULT 'REQUEST';
+
+-- Update approval_signs table stage column
+ALTER TABLE approval_signs
+MODIFY COLUMN stage ENUM('REQUEST', 'RECEIPT', 'RECEIPT_APPROVAL', 'RESULT_INPUT', 'RESULT_APPROVAL', 'COMPLETED') NOT NULL;

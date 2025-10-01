@@ -174,12 +174,19 @@ public class ApprovalDomainService implements IApprovalService {
         if (rejectedCount > 0) {
             approval.updateStatus(ApprovalStatus.REJECTED);
 
-            // Test를 RECEIPT 단계로 되돌림
+            // Test를 이전 단계로 되돌림
             if (!signs.isEmpty()) {
-                Long targetId = signs.get(0).getTargetId(); // 모든 sign의 targetId는 동일 (testId)
+                Long targetId = signs.get(0).getTargetId();
+                com.lims.lims_study.domain.test.model.TestStage stage = signs.get(0).getStage();
+
                 testCrudService.findById(targetId).ifPresent(test -> {
-                    log.info("🔙 Approval rejected, moving test {} back to RECEIPT stage", targetId);
-                    test.moveToPreviousStage(); // RECEIPT_APPROVAL -> RECEIPT
+                    if (stage == com.lims.lims_study.domain.test.model.TestStage.RECEIPT_APPROVAL) {
+                        log.info("🔙 Receipt approval rejected, moving test {} back to RECEIPT stage", targetId);
+                        test.moveToPreviousStage(); // RECEIPT_APPROVAL -> RECEIPT
+                    } else if (stage == com.lims.lims_study.domain.test.model.TestStage.RESULT_APPROVAL) {
+                        log.info("🔙 Result approval rejected, moving test {} back to RESULT_INPUT stage", targetId);
+                        test.moveToPreviousStage(); // RESULT_APPROVAL -> RESULT_INPUT
+                    }
                     testCrudService.updateTest(test);
                 });
             }
@@ -187,6 +194,23 @@ public class ApprovalDomainService implements IApprovalService {
         // 모든 승인자가 승인 → 전체 승인
         else if (approvedCount == totalSigns) {
             approval.updateStatus(ApprovalStatus.APPROVED);
+
+            // Test를 다음 단계로 이동
+            if (!signs.isEmpty()) {
+                Long targetId = signs.get(0).getTargetId();
+                com.lims.lims_study.domain.test.model.TestStage stage = signs.get(0).getStage();
+
+                testCrudService.findById(targetId).ifPresent(test -> {
+                    if (stage == com.lims.lims_study.domain.test.model.TestStage.RECEIPT_APPROVAL) {
+                        log.info("✅ Receipt approval approved, moving test {} to RESULT_INPUT", targetId);
+                        test.moveToNextStage(); // RECEIPT_APPROVAL -> RESULT_INPUT
+                    } else if (stage == com.lims.lims_study.domain.test.model.TestStage.RESULT_APPROVAL) {
+                        log.info("✅ Result approval approved, moving test {} to COMPLETED", targetId);
+                        test.moveToNextStage(); // RESULT_APPROVAL -> COMPLETED
+                    }
+                    testCrudService.updateTest(test);
+                });
+            }
         }
         // 일부만 승인 → 부분 승인
         else if (approvedCount > 0) {

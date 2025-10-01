@@ -242,6 +242,15 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
                 새 시험 의뢰
               </Button>
 
+              {/* 대시보드 바로가기 버튼 */}
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                title="대시보드로 이동"
+              >
+                <Home className="w-5 h-5" />
+              </button>
+
               {/* 로그아웃 버튼 */}
               <button
                 onClick={handleLogout}

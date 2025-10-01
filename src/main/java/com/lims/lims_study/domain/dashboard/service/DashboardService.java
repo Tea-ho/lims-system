@@ -72,6 +72,27 @@ public class DashboardService {
         // 대기 중인 승인 수
         long pendingApprovals = approvalRepository.countPendingApprovals();
 
+        // 추가 통계 계산
+        // 지난달 시험 수 (이번달 1일 이전)
+        long totalTestsLastMonth = testRepository.countTestsLastMonth();
+
+        // 월별 증가율 계산
+        double monthlyTestGrowthRate = 0.0;
+        if (totalTestsLastMonth > 0) {
+            long thisMonthTests = testRepository.countTestsThisMonth();
+            monthlyTestGrowthRate = ((double) (thisMonthTests - totalTestsLastMonth) / totalTestsLastMonth) * 100;
+        }
+
+        // 어제 완료된 시험 수
+        long completedTestsYesterday = testRepository.countCompletedTestsYesterday();
+
+        // 활성 제품 수 (전체 제품 = 활성 제품으로 가정)
+        long activeProducts = totalProducts;
+
+        // 처리 대기 변화량 (어제 대비)
+        long pendingTestsYesterday = testRepository.countPendingTestsYesterday();
+        long pendingTestsChange = pendingTests - pendingTestsYesterday;
+
         return DashboardStatsDto.builder()
                 .totalTests(totalTests)
                 .pendingTests(pendingTests)
@@ -79,6 +100,11 @@ public class DashboardService {
                 .myTests(myTests)
                 .totalProducts(totalProducts)
                 .pendingApprovals(pendingApprovals)
+                .totalTestsLastMonth(totalTestsLastMonth)
+                .monthlyTestGrowthRate(Math.round(monthlyTestGrowthRate * 10.0) / 10.0) // 소수점 1자리
+                .completedTestsYesterday(completedTestsYesterday)
+                .activeProducts(activeProducts)
+                .pendingTestsChange(pendingTestsChange)
                 .build();
     }
 

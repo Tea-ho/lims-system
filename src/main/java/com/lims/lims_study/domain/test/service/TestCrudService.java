@@ -6,6 +6,7 @@ import com.lims.lims_study.domain.test.model.RequestInfo;
 import com.lims.lims_study.domain.test.model.TestStage;
 import com.lims.lims_study.domain.test.model.Test;
 import com.lims.lims_study.domain.test.repository.TestRepository;
+import com.lims.lims_study.global.audit.Auditable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,14 @@ public class TestCrudService implements ITestCrudService {
 
     @Override
     @Transactional
+    @Auditable(
+        entityType = "TEST",
+        action = "CREATE",
+        entityIdExpression = "#test.id",
+        userIdExpression = "#test.userId",
+        recordNewValue = true,
+        newValueExpression = "#test"
+    )
     public void createTest(Test test, RequestInfo requestInfo) {
         testValidator.validateUserAndProductExists(test);
         testRequestCrudService.insert(requestInfo);
@@ -30,6 +39,12 @@ public class TestCrudService implements ITestCrudService {
     }
 
     @Override
+    @Auditable(
+        entityType = "TEST",
+        action = "UPDATE_REQUEST",
+        entityIdExpression = "#testId",
+        userIdExpression = "#test.userId"
+    )
     public void updateRequestInfo(Long testId, TestUpdateDto dto) {
         Test test = testValidator.validateTestExists(testId, this);
         if (!TestStage.REQUEST.name().equals(test.getStage())) {
@@ -46,6 +61,14 @@ public class TestCrudService implements ITestCrudService {
 
     @Override
     @Transactional
+    @Auditable(
+        entityType = "TEST",
+        action = "DELETE",
+        entityIdExpression = "#testId",
+        userIdExpression = "#test.userId",
+        recordOldValue = true,
+        oldValueExpression = "#test"
+    )
     public void deleteTest(Long testId) {
         Test test = testValidator.validateTestExists(testId, this);
         testRequestCrudService.delete(test.getRequestInfoId());
@@ -68,6 +91,14 @@ public class TestCrudService implements ITestCrudService {
     }
 
     @Override
+    @Auditable(
+        entityType = "TEST",
+        action = "UPDATE",
+        entityIdExpression = "#test.id",
+        userIdExpression = "#test.userId",
+        recordNewValue = true,
+        newValueExpression = "#test"
+    )
     public void updateTest(Test test) {
         this.test.update(test);
     }
