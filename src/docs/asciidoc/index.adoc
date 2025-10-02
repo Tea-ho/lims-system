@@ -1,46 +1,1060 @@
-= LIMS API Documentation
-:icons: font
+= LIMS Study API Documentation
 :doctype: book
+:icons: font
 :source-highlighter: highlightjs
 :toc: left
-:toclevels: 2
-:seclinks
+:toclevels: 3
+:sectlinks:
 
+[[overview]]
+= Overview
+
+LIMS (Laboratory Information Management System) Study 프로젝트의 REST API 문서입니다.
+
+[[overview-http-verbs]]
+== HTTP verbs
+
+|===
+| Verb | Usage
+
+| `GET`
+| 리소스 조회에 사용
+
+| `POST`
+| 새로운 리소스 생성에 사용
+
+| `PUT`
+| 기존 리소스 수정에 사용
+
+| `DELETE`
+| 기존 리소스 삭제에 사용
+|===
+
+[[overview-http-status-codes]]
+== HTTP status codes
+
+|===
+| Status code | Usage
+
+| `200 OK`
+| 요청이 성공적으로 완료됨
+
+| `201 Created`
+| 새로운 리소스가 성공적으로 생성됨
+
+| `204 No Content`
+| 요청이 성공했으나 응답 본문이 없음
+
+| `400 Bad Request`
+| 잘못된 요청 형식
+
+| `401 Unauthorized`
+| 인증이 필요함
+
+| `403 Forbidden`
+| 권한이 없음
+
+| `404 Not Found`
+| 요청한 리소스를 찾을 수 없음
+|===
+
+[[resources]]
+= Resources
+
+[[resources-user]]
 == User API
 
-=== Register User
-include::{snippets}/user-register/http-request.adoc[]
-include::{snippets}/user-register/request-fields.adoc[]
-include::{snippets}/user-register/http-response.adoc[]
-include::{snippets}/user-register/response-fields.adoc[]
+사용자 관리 API입니다.
 
-=== update User
-include::{snippets}/user-update/http-request.adoc[]
-include::{snippets}/user-update/request-fields.adoc[]
-include::{snippets}/user-update/http-response.adoc[]
-include::{snippets}/user-update/response-fields.adoc[]
+=== 사용자 생성
 
+`POST /api/users`
+
+==== Request Fields
+
+|===
+| Path | Type | Description | Constraints
+
+| `username`
+| String
+| 사용자 아이디
+| 필수, 3-50자
+
+| `password`
+| String
+| 비밀번호
+| 필수, 8-100자, 대소문자+숫자+특수문자 포함
+
+| `role`
+| String
+| 권한
+| 필수, ROLE_USER/ROLE_MANAGER/ROLE_ADMIN
+|===
+
+==== Response Fields
+
+|===
+| Path | Type | Description
+
+| `success`
+| Boolean
+| 성공 여부
+
+| `data.id`
+| Long
+| 사용자 ID
+
+| `data.username`
+| String
+| 사용자 아이디
+
+| `data.role`
+| String
+| 권한
+
+| `data.createdAt`
+| String
+| 생성일시
+
+| `data.updatedAt`
+| String
+| 수정일시
+|===
+
+==== Example Request
+
+```
+POST /api/users HTTP/1.1
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "Password123!",
+  "role": "ROLE_USER"
+}
+```
+
+==== Example Response
+
+```
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "username": "testuser",
+    "role": "ROLE_USER",
+    "createdAt": "2025-01-01T00:00:00",
+    "updatedAt": "2025-01-01T00:00:00"
+  }
+}
+```
+
+=== 사용자 조회
+
+`GET /api/users/{id}`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `id`
+| Long
+| 사용자 ID
+|===
+
+==== Response Fields
+
+|===
+| Path | Type | Description
+
+| `success`
+| Boolean
+| 성공 여부
+
+| `data.id`
+| Long
+| 사용자 ID
+
+| `data.username`
+| String
+| 사용자 아이디
+
+| `data.role`
+| String
+| 권한
+
+| `data.createdAt`
+| String
+| 생성일시
+
+| `data.updatedAt`
+| String
+| 수정일시
+|===
+
+=== 사용자 검색
+
+`GET /api/users`
+
+==== Query Parameters
+
+|===
+| Parameter | Type | Description | Required
+
+| `page`
+| Integer
+| 페이지 번호 (0부터 시작)
+| Optional (default: 0)
+
+| `size`
+| Integer
+| 페이지 크기
+| Optional (default: 10)
+
+| `username`
+| String
+| 사용자 아이디 (부분 검색)
+| Optional
+
+| `role`
+| String
+| 권한
+| Optional
+|===
+
+==== Response Fields
+
+|===
+| Path | Type | Description
+
+| `success`
+| Boolean
+| 성공 여부
+
+| `data.content[]`
+| Array
+| 사용자 목록
+
+| `data.content[].id`
+| Long
+| 사용자 ID
+
+| `data.content[].username`
+| String
+| 사용자 아이디
+
+| `data.content[].role`
+| String
+| 권한
+
+| `data.totalElements`
+| Long
+| 전체 개수
+
+| `data.totalPages`
+| Integer
+| 전체 페이지 수
+|===
+
+=== 사용자 수정
+
+`PUT /api/users/{id}`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `id`
+| Long
+| 사용자 ID
+|===
+
+==== Request Fields
+
+|===
+| Path | Type | Description | Constraints
+
+| `password`
+| String
+| 비밀번호
+| Optional, 8-100자, 대소문자+숫자+특수문자 포함
+
+| `role`
+| String
+| 권한
+| Optional, ROLE_USER/ROLE_MANAGER/ROLE_ADMIN
+|===
+
+=== 사용자 삭제
+
+`DELETE /api/users/{id}`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `id`
+| Long
+| 사용자 ID
+|===
+
+=== 현재 사용자 조회
+
+`GET /api/users/me`
+
+JWT 토큰을 통해 현재 인증된 사용자 정보를 조회합니다.
+
+=== 사용자명 존재 여부 확인
+
+`GET /api/users/exists`
+
+==== Query Parameters
+
+|===
+| Parameter | Type | Description | Required
+
+| `username`
+| String
+| 확인할 사용자 아이디
+| Required
+|===
+
+==== Response Fields
+
+|===
+| Path | Type | Description
+
+| `success`
+| Boolean
+| 성공 여부
+
+| `data`
+| Boolean
+| 존재 여부 (true: 존재, false: 미존재)
+|===
+
+[[resources-product]]
 == Product API
 
-=== Create Product
-include::{snippets}/product-create/http-request.adoc[]
-include::{snippets}/product-create/request-fields.adoc[]
-include::{snippets}/product-create/http-response.adoc[]
-include::{snippets}/product-create/response-fields.adoc[]
+제품 관리 API입니다.
 
+=== 제품 생성
+
+`POST /api/products`
+
+==== Request Fields
+
+|===
+| Path | Type | Description | Constraints
+
+| `name`
+| String
+| 제품명
+| 필수, 1-100자
+
+| `description`
+| String
+| 제품 설명
+| Optional, 최대 500자
+|===
+
+==== Response Fields
+
+|===
+| Path | Type | Description
+
+| `id`
+| Long
+| 제품 ID
+
+| `name`
+| String
+| 제품명
+
+| `description`
+| String
+| 제품 설명
+
+| `createdAt`
+| String
+| 생성일시
+
+| `updatedAt`
+| String
+| 수정일시
+|===
+
+=== 제품 조회
+
+`GET /api/products/{id}`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `id`
+| Long
+| 제품 ID
+|===
+
+=== 전체 제품 조회
+
+`GET /api/products/all`
+
+전체 제품 목록을 조회합니다.
+
+=== 제품 검색
+
+`GET /api/products`
+
+==== Query Parameters
+
+|===
+| Parameter | Type | Description | Required
+
+| `productName`
+| String
+| 제품명 (부분 검색)
+| Optional
+
+| `page`
+| Integer
+| 페이지 번호
+| Optional (default: 1)
+
+| `limit`
+| Integer
+| 페이지 크기
+| Optional (default: 10)
+|===
+
+=== 제품 수정
+
+`PUT /api/products/{id}`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `id`
+| Long
+| 제품 ID
+|===
+
+==== Request Fields
+
+|===
+| Path | Type | Description | Constraints
+
+| `name`
+| String
+| 제품명
+| Optional, 1-100자
+
+| `description`
+| String
+| 제품 설명
+| Optional, 최대 500자
+|===
+
+=== 제품 삭제
+
+`DELETE /api/products/{id}`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `id`
+| Long
+| 제품 ID
+|===
+
+[[resources-test]]
 == Test API
 
-=== Create Test
-include::{snippets}/test-create/http-request.adoc[]
-include::{snippets}/test-create/request-fields.adoc[]
-include::{snippets}/test-create/http-response.adoc[]
-include::{snippets}/test-create/response-fields.adoc[]
+시험 관리 API입니다.
 
+=== 시험 생성
+
+`POST /api/tests`
+
+==== Request Fields
+
+|===
+| Path | Type | Description | Constraints
+
+| `productId`
+| Long
+| 제품 ID
+| 필수
+
+| `requesterId`
+| Long
+| 요청자 ID
+| 필수
+
+| `testName`
+| String
+| 시험명
+| 필수, 1-200자
+
+| `purpose`
+| String
+| 시험 목적
+| Optional, 최대 1000자
+
+| `targetDate`
+| String
+| 목표 완료일
+| Optional, yyyy-MM-dd 형식
+|===
+
+=== 시험 조회
+
+`GET /api/tests/{id}`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `id`
+| Long
+| 시험 ID
+|===
+
+==== Response Fields
+
+|===
+| Path | Type | Description
+
+| `id`
+| Long
+| 시험 ID
+
+| `productId`
+| Long
+| 제품 ID
+
+| `productName`
+| String
+| 제품명
+
+| `requesterId`
+| Long
+| 요청자 ID
+
+| `requesterName`
+| String
+| 요청자명
+
+| `testName`
+| String
+| 시험명
+
+| `purpose`
+| String
+| 시험 목적
+
+| `stage`
+| String
+| 시험 단계 (RECEIPT, RECEIPT_APPROVAL, ANALYSIS, ANALYSIS_APPROVAL, RESULT, RESULT_APPROVAL, COMPLETE)
+
+| `status`
+| String
+| 시험 상태
+
+| `targetDate`
+| String
+| 목표 완료일
+
+| `createdAt`
+| String
+| 생성일시
+
+| `updatedAt`
+| String
+| 수정일시
+|===
+
+=== 시험 검색
+
+`GET /api/tests`
+
+==== Query Parameters
+
+|===
+| Parameter | Type | Description | Required
+
+| `productId`
+| Long
+| 제품 ID
+| Optional
+
+| `requesterId`
+| Long
+| 요청자 ID
+| Optional
+
+| `stage`
+| String
+| 시험 단계
+| Optional
+
+| `page`
+| Integer
+| 페이지 번호
+| Optional (default: 1)
+
+| `limit`
+| Integer
+| 페이지 크기
+| Optional (default: 10)
+|===
+
+=== 시험 수정
+
+`PUT /api/tests/{id}`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `id`
+| Long
+| 시험 ID
+|===
+
+==== Request Fields
+
+|===
+| Path | Type | Description | Constraints
+
+| `testName`
+| String
+| 시험명
+| Optional, 1-200자
+
+| `purpose`
+| String
+| 시험 목적
+| Optional, 최대 1000자
+
+| `targetDate`
+| String
+| 목표 완료일
+| Optional, yyyy-MM-dd 형식
+|===
+
+=== 시험 단계 변경
+
+`PUT /api/tests/{id}/stage`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `id`
+| Long
+| 시험 ID
+|===
+
+==== Request Fields
+
+|===
+| Path | Type | Description | Constraints
+
+| `stage`
+| String
+| 변경할 시험 단계
+| 필수, RECEIPT/RECEIPT_APPROVAL/ANALYSIS/ANALYSIS_APPROVAL/RESULT/RESULT_APPROVAL/COMPLETE
+|===
+
+=== 시험 삭제
+
+`DELETE /api/tests/{id}`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `id`
+| Long
+| 시험 ID
+|===
+
+[[resources-approval]]
 == Approval API
 
-=== Create Approval
-// include::{snippets}/approval-create/http-request.adoc[]
-// include::{snippets}/approval-create/request-fields.adoc[]
-// include::{snippets}/approval-create/http-response.adoc[]
-// include::{snippets}/approval-create/response-fields.adoc[]
+승인 관리 API입니다.
+
+=== 승인 생성 (접수승인 요청)
+
+`POST /api/approvals`
+
+==== Request Fields
+
+|===
+| Path | Type | Description | Constraints
+
+| `requesterId`
+| Long
+| 요청자 ID
+| 필수
+
+| `comment`
+| String
+| 요청 사유
+| Optional, 최대 500자
+
+| `signs[]`
+| Array
+| 승인자 목록
+| 필수, 최소 1명
+
+| `signs[].approverId`
+| Long
+| 승인자 ID
+| 필수
+
+| `signs[].targetId`
+| Long
+| 대상 시험 ID
+| 필수
+
+| `signs[].stage`
+| String
+| 승인 단계
+| 필수, RECEIPT_APPROVAL/ANALYSIS_APPROVAL/RESULT_APPROVAL
+|===
+
+=== 승인 조회
+
+`GET /api/approvals/{id}`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `id`
+| Long
+| 승인 ID
+|===
+
+=== 타겟별 승인 목록 조회
+
+`GET /api/approvals/target/{targetId}`
+
+특정 시험(targetId)에 대한 모든 승인 요청을 조회합니다.
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `targetId`
+| Long
+| 시험 ID
+|===
+
+=== 대기 중인 승인 목록 조회
+
+`GET /api/approvals/pending`
+
+현재 로그인한 사용자가 승인해야 할 대기 중인 승인 목록을 조회합니다.
+
+==== Query Parameters
+
+|===
+| Parameter | Type | Description | Required
+
+| `page`
+| Integer
+| 페이지 번호
+| Optional (default: 1)
+
+| `limit`
+| Integer
+| 페이지 크기
+| Optional (default: 10)
+|===
+
+==== Response Fields
+
+|===
+| Path | Type | Description
+
+| `success`
+| Boolean
+| 성공 여부
+
+| `data[]`
+| Array
+| 승인 목록
+
+| `data[].id`
+| Long
+| 승인 ID
+
+| `data[].requesterId`
+| Long
+| 요청자 ID
+
+| `data[].requesterName`
+| String
+| 요청자명
+
+| `data[].comment`
+| String
+| 요청 사유
+
+| `data[].status`
+| String
+| 승인 상태 (PENDING, APPROVED, REJECTED)
+
+| `data[].signs[]`
+| Array
+| 승인 서명 목록
+
+| `data[].signs[].approverId`
+| Long
+| 승인자 ID
+
+| `data[].signs[].status`
+| String
+| 서명 상태
+|===
+
+=== 승인 서명 업데이트 (승인/거부)
+
+`PUT /api/approvals/{approvalId}/signs/{signId}`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `approvalId`
+| Long
+| 승인 ID
+
+| `signId`
+| Long
+| 서명 ID
+|===
+
+==== Request Fields
+
+|===
+| Path | Type | Description | Constraints
+
+| `status`
+| String
+| 승인 상태
+| 필수, APPROVED 또는 REJECTED
+
+| `comment`
+| String
+| 승인/거부 사유
+| Optional, 최대 500자
+|===
+
+=== 승인 처리
+
+`PUT /api/approvals/{id}/process`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `id`
+| Long
+| 승인 ID
+|===
+
+==== Request Fields
+
+|===
+| Path | Type | Description | Constraints
+
+| `status`
+| String
+| 승인 상태
+| 필수, APPROVED 또는 REJECTED
+
+| `comment`
+| String
+| 승인/거부 사유
+| Optional, 최대 500자
+
+| `signId`
+| Long
+| 서명 ID
+| 필수
+|===
+
+=== 승인 삭제
+
+`DELETE /api/approvals/{id}`
+
+==== Path Parameters
+
+|===
+| Parameter | Type | Description
+
+| `id`
+| Long
+| 승인 ID
+|===
+
+[[resources-dashboard]]
+== Dashboard API
+
+대시보드 통계 API입니다.
+
+=== 통계 조회
+
+`GET /api/dashboard/stats`
+
+전체 시스템 통계를 조회합니다.
+
+==== Response Fields
+
+|===
+| Path | Type | Description
+
+| `totalTests`
+| Long
+| 전체 시험 수
+
+| `completedTests`
+| Long
+| 완료된 시험 수
+
+| `pendingApprovals`
+| Long
+| 대기 중인 승인 수
+
+| `totalProducts`
+| Long
+| 전체 제품 수
+
+| `totalUsers`
+| Long
+| 전체 사용자 수
+
+| `testsByStage`
+| Object
+| 단계별 시험 수
+
+| `testsByStage.RECEIPT`
+| Long
+| 접수 단계 시험 수
+
+| `testsByStage.RECEIPT_APPROVAL`
+| Long
+| 접수승인 단계 시험 수
+
+| `testsByStage.ANALYSIS`
+| Long
+| 분석 단계 시험 수
+
+| `testsByStage.ANALYSIS_APPROVAL`
+| Long
+| 분석승인 단계 시험 수
+
+| `testsByStage.RESULT`
+| Long
+| 결과 단계 시험 수
+
+| `testsByStage.RESULT_APPROVAL`
+| Long
+| 결과승인 단계 시험 수
+
+| `testsByStage.COMPLETE`
+| Long
+| 완료 단계 시험 수
+|===
+
+[[resources-auth]]
+== Authentication API
+
+인증 API입니다.
+
+=== 로그인
+
+`POST /api/auth/login`
+
+==== Request Fields
+
+|===
+| Path | Type | Description | Constraints
+
+| `username`
+| String
+| 사용자 아이디
+| 필수
+
+| `password`
+| String
+| 비밀번호
+| 필수
+|===
+
+==== Response Fields
+
+|===
+| Path | Type | Description
+
+| `success`
+| Boolean
+| 성공 여부
+
+| `data.token`
+| String
+| JWT 토큰
+
+| `data.user.id`
+| Long
+| 사용자 ID
+
+| `data.user.username`
+| String
+| 사용자 아이디
+
+| `data.user.role`
+| String
+| 권한
+|===
+
+=== 로그아웃
+
+`POST /api/auth/logout`
+
+현재 세션을 종료합니다.
+
+[[test-coverage]]
+= Test Coverage
+
+이 프로젝트는 56개의 테스트 케이스를 포함하고 있습니다.
+
+* Controller 테스트: 40개
+* Service 테스트: 16개
+
+테스트 커버리지 리포트는 `build/reports/jacoco/test/html/index.html` 에서 확인할 수 있습니다.
 
