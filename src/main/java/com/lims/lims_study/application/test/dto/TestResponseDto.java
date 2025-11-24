@@ -45,11 +45,13 @@ public class TestResponseDto {
     public static class RequestInfoDto {
         private final String title;
         private final String description;
+        private final String priority;
         private final boolean requiresApproval;
 
-        public RequestInfoDto(String title, String description, boolean requiresApproval) {
+        public RequestInfoDto(String title, String description, String priority, boolean requiresApproval) {
             this.title = title;
             this.description = description;
+            this.priority = priority;
             this.requiresApproval = requiresApproval;
         }
 
@@ -59,6 +61,10 @@ public class TestResponseDto {
 
         public String getDescription() {
             return description;
+        }
+
+        public String getPriority() {
+            return priority;
         }
 
         public boolean isRequiresApproval() {

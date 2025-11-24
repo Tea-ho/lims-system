@@ -9,6 +9,7 @@ public class RequestInfo {
     private Long id;
     private String title;
     private String description;
+    private String priority;
     private boolean requiresApproval;
 
     // MyBatis용 기본 생성자
@@ -19,6 +20,7 @@ public class RequestInfo {
         validateInputs(title, description);
         this.title = title;
         this.description = description;
+        this.priority = "NORMAL";
         this.requiresApproval = false;
     }
 
@@ -26,6 +28,15 @@ public class RequestInfo {
         validateInputs(title, description);
         this.title = title;
         this.description = description;
+        this.priority = "NORMAL";
+        this.requiresApproval = requiresApproval;
+    }
+
+    public RequestInfo(String title, String description, String priority, boolean requiresApproval) {
+        validateInputs(title, description);
+        this.title = title;
+        this.description = description;
+        this.priority = priority != null ? priority : "NORMAL";
         this.requiresApproval = requiresApproval;
     }
 
@@ -39,8 +50,16 @@ public class RequestInfo {
     }
 
     public void updateRequestInfo(TestUpdateDto dto){
-        this.title = dto.getTitle();
-        this.description = dto.getDescription();
+        if (dto.getTitle() != null && !dto.getTitle().trim().isEmpty()) {
+            this.title = dto.getTitle();
+        }
+        if (dto.getDescription() != null) {
+            this.description = dto.getDescription();
+        }
+        if (dto.getPriority() != null) {
+            this.priority = dto.getPriority();
+        }
+        this.requiresApproval = dto.isRequiresApproval();
     }
 
     // getter and setter
@@ -66,6 +85,14 @@ public class RequestInfo {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
     }
 
     public boolean isRequiresApproval() {

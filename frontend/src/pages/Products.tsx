@@ -40,19 +40,21 @@ class ProductService {
   }
 
   static async createProduct(productData: ProductCreateDto): Promise<Product> {
-    const response = await this.request<{ data: Product }>('/api/products', {
+    // POST 응답은 data wrapper 없이 직접 객체 반환
+    const response = await this.request<Product>('/api/products', {
       method: 'POST',
       body: JSON.stringify(productData),
     });
-    return response.data;
+    return response;
   }
 
   static async updateProduct(id: number, productData: ProductUpdateDto): Promise<Product> {
-    const response = await this.request<{ data: Product }>(`/api/products/${id}`, {
+    // PUT 응답은 data wrapper 없이 직접 객체 반환
+    const response = await this.request<Product>(`/api/products/${id}`, {
       method: 'PUT',
       body: JSON.stringify(productData),
     });
-    return response.data;
+    return response;
   }
 
   static async deleteProduct(id: number): Promise<void> {

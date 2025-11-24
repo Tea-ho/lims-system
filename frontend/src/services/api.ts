@@ -91,7 +91,8 @@ class ApiService {
 
   async updateTest(id: number, dto: TestUpdateDto): Promise<Test> {
     const response = await this.api.put(`/tests/${id}`, dto);
-    return response.data.data;
+    // PUT 응답은 data wrapper 없이 직접 객체 반환
+    return response.data;
   }
 
   async deleteTest(id: number): Promise<void> {

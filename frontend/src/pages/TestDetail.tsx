@@ -99,6 +99,11 @@ const TestDetail: React.FC = () => {
   const [resultApprovalDescription, setResultApprovalDescription] = useState('');
   const [selectedResultApprovers, setSelectedResultApprovers] = useState<number[]>([]);
 
+  // 수정 모달 상태
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+
   useEffect(() => {
     const fetchTest = async () => {
       if (!id) {
@@ -384,6 +389,47 @@ const TestDetail: React.FC = () => {
     }
   };
 
+  // 수정 모달 열기
+  const handleOpenEditModal = () => {
+    setEditTitle(test?.requestInfo?.title || '');
+    setEditDescription(test?.requestInfo?.description || '');
+    setShowEditModal(true);
+  };
+
+  // 수정 처리 함수
+  const handleEdit = async () => {
+    if (!editTitle.trim()) {
+      toast.error('제목을 입력해주세요.');
+      return;
+    }
+
+    if (!test?.id) {
+      toast.error('시험 ID가 없습니다.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await TestService.updateTest(test.id, {
+        title: editTitle.trim(),
+        description: editDescription.trim()
+      });
+
+      // 데이터를 다시 가져와서 최신 상태 반영
+      const refreshedTest = await TestService.getTestById(test.id);
+      setTest(refreshedTest);
+      setShowEditModal(false);
+      setEditTitle('');
+      setEditDescription('');
+      toast.success('시험 정보가 수정되었습니다.');
+    } catch (error) {
+      console.error('수정 처리 실패:', error);
+      toast.error('수정 처리에 실패했습니다.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-96">
@@ -501,7 +547,7 @@ const TestDetail: React.FC = () => {
               </button>
             )}
             <button
-              onClick={() => {/* 수정 기능 추가 */}}
+              onClick={handleOpenEditModal}
               className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <Edit className="-ml-1 mr-2 h-4 w-4" />
@@ -1295,6 +1341,124 @@ const TestDetail: React.FC = () => {
                   <>
                     <CheckCircle className="w-4 h-4" />
                     <span>승인 요청</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* 수정 모달 */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            {/* 모달 헤더 */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Edit className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">시험 정보 수정</h3>
+                  <p className="text-sm text-gray-500">시험 #{test?.id}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditTitle('');
+                  setEditDescription('');
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                disabled={submitting}
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* 모달 본문 */}
+            <div className="px-6 py-4 space-y-4">
+              {/* 시험 정보 요약 */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">제품</span>
+                  <span className="font-medium text-gray-900">{test?.product?.name}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">의뢰자</span>
+                  <span className="font-medium text-gray-900">{test?.user?.username}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">현재 상태</span>
+                  <span className={`px-2 py-1 text-xs rounded-full ${stageInfo.color}`}>
+                    {stageInfo.label}
+                  </span>
+                </div>
+              </div>
+
+              {/* 제목 입력 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  제목 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="시험 제목을 입력하세요"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={submitting}
+                />
+              </div>
+
+              {/* 설명 입력 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  설명
+                </label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder="시험에 대한 설명을 입력하세요..."
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  disabled={submitting}
+                />
+              </div>
+            </div>
+
+            {/* 모달 푸터 */}
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditTitle('');
+                  setEditDescription('');
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                disabled={submitting}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleEdit}
+                disabled={submitting || !editTitle.trim()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              >
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>저장 중...</span>
+                  </>
+                ) : (
+                  <>
+                    <Edit className="w-4 h-4" />
+                    <span>저장</span>
                   </>
                 )}
               </button>
