@@ -43,26 +43,30 @@ mybatis:
     default-statement-timeout: 30
     # Enum 타입 핸들러 설정
     default-enum-type-handler: org.apache.ibatis.type.EnumTypeHandler
+    # SQL 로그 출력
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   type-handlers-package: com.lims.lims_study.handler
 
-# 로깅 설정
+# 로깅 설정 (Universal Logger가 SQL 로깅 처리)
 logging:
   level:
     root: INFO
     com.lims.lims_study: DEBUG
     org.springframework.security: INFO
     org.springframework.web: INFO
-    org.mybatis: DEBUG
-    org.springframework.transaction: DEBUG
-  pattern:
-    # %wEx를 %ex로 수정
-    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%ex"
-    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 
 # JWT 설정
 jwt:
   secret: ${JWT_SECRET:mySecretKeyForJwtTokenGenerationThatShouldBeLongEnoughForHS512AlgorithmWithAtLeast512BitsOfSecurityRequirement}
   expiration: 86400000  # 24시간 (밀리초)
+
+# Universal Logger 설정
+universal-logger:
+  log-path: C:/log
+  config-path: config/universal-logger.yml
+  sql-capture:
+    enabled: true
+  auto-init: true
 
 # 관리자 설정
 management:

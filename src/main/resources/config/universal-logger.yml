@@ -1,0 +1,38 @@
+version: "1.0"
+
+# appName은 spring.application.name에서 자동으로 가져옴
+# global.appName 제거 - 중복 방지
+
+levels:
+  root: "INFO"
+  com.lims.lims_study: "DEBUG"
+
+outputs:
+  # Console output
+  console:
+    enabled: true
+    level: "INFO"
+    format: "[{timestamp}] {level} - {logger} | {message}"
+    colors:
+      DEBUG: "cyan"
+      INFO: "green"
+      WARN: "yellow"
+      ERROR: "red"
+
+  # File output
+  file:
+    enabled: true
+    level: "DEBUG"
+    path: "C:/log/{appName}/application.log"
+    format: "{timestamp} | {level} | {logger}:{line} | {message}"
+    rotation:
+      maxSize: "50MB"
+      maxFiles: 30
+      compress: true
+
+  # Error file
+  errorFile:
+    enabled: true
+    level: "ERROR"
+    path: "C:/log/{appName}/error.log"
+    format: "{timestamp} | {level} | {logger}:{line} | {message} | {exception}"
